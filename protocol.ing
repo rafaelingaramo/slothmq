@@ -1,0 +1,23 @@
+//producing to a queue/topic
+//needs to be kept alive? yes/no
+
+--message: produce
+--type: queue
+--container: queue.command.order.purchase
+--dlq: dlq.queue.command.order.purchase
+--timestamp: 12314214141
+--authentication: base64(admin:1234)
+--contents: [a3fe2c4]
+
+
+//Consuming from a queue
+//needs to be kept alive? yes, it needs to keep listening to whatever comes in the channel
+--message: consume
+--container: queue.command.order.purchase
+--authentication: base64(admin:1234)
+
+//disconnecting a client from the server gracefully by client's request
+--message: disconnect
+
+//disconnecting a client from the server by from by server's request
+--message: server-disconnect

@@ -1,10 +1,11 @@
 package br.slothmq.server;
 
-import br.slothmq.Message;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import br.slothmq.protocol.ProtocolMessageParser;
+import br.slothmq.protocol.ProtocolTransferObject;
 
-import java.io.DataInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 
 public class MessageReader {
@@ -15,23 +16,24 @@ public class MessageReader {
     }
 
 
-    public Message read(Socket socketClient) {
+    public ProtocolTransferObject read(Socket socketClient) {
 
         try {
-            DataInputStream dis = new DataInputStream(socketClient.getInputStream());
-            byte[] buffer = new byte[1024];
+            BufferedReader br = new BufferedReader(new InputStreamReader(socketClient.getInputStream()));
+            char[] buffer = new char[1024];
+            StringBuilder builder = new StringBuilder();
             while (true) {
-                int read = dis.read(buffer);
+                int read = br.read(buffer);
                 if (read == -1) { //EOF
                     //nothing to read, exit
-                    break;
+                    continue;
                 }
                 if (read == 0) {
                     //no bytes to read this time
                     continue;
                 }
-                ObjectMapper mapper = new ObjectMapper();
-                return mapper.readValue(buffer, Message.class);
+                builder.append(buffer);
+                return ProtocolMessageParser.fromString(builder.toString());
             }
         } catch (IOException e) {
             //do nothing for now throw in  the future
