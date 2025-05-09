@@ -32,4 +32,6 @@ bin/
 build/**
 
 #gradle files#
-.gradle/**
+.gradle/8.10/**
+
+.idea/**
