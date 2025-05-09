@@ -1,7 +1,6 @@
 package br.slothmq.protocol;
 
 import java.time.Instant;
-import java.util.Arrays;
 
 public class ProtocolTransferObject {
     /*
@@ -19,7 +18,7 @@ public class ProtocolTransferObject {
     private String address;
     private Instant timestamp;
     private String authentication;
-    private byte[] contents;
+    private String contents;
 
     public static ProtocolTransferObject standardQueueLetter() {
         ProtocolTransferObject letter = new ProtocolTransferObject();
@@ -27,6 +26,14 @@ public class ProtocolTransferObject {
         letter.setMessage(MessageType.PRODUCE);
         letter.setDestination(DestinationType.QUEUE);
 
+        return letter;
+    }
+
+    public static ProtocolTransferObject standardConsumerLetter() {
+        ProtocolTransferObject letter = new ProtocolTransferObject();
+        letter.setTimestamp(Instant.now());
+        letter.setMessage(MessageType.CONSUME);
+        letter.setDestination(DestinationType.QUEUE);
         return letter;
     }
 
@@ -70,11 +77,11 @@ public class ProtocolTransferObject {
         this.authentication = authentication;
     }
 
-    public byte[] getContents() {
+    public String getContents() {
         return contents;
     }
 
-    public void setContents(byte[] contents) {
+    public void setContents(String contents) {
         this.contents = contents;
     }
 
@@ -85,6 +92,6 @@ public class ProtocolTransferObject {
                 "--address: " + address + "\n" +
                 "--timestamp: " + timestamp + "\n" +
                 "--authentication: " + authentication + "\n" +
-                "--contents: " + Arrays.toString(contents);
+                "--contents: " + contents;
     }
 }

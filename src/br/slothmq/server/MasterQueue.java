@@ -2,10 +2,7 @@ package br.slothmq.server;
 
 import br.slothmq.exception.NonexistentQueueException;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.*;
 
 public class MasterQueue {
     private static final Map<String, Queue<Object>> MAP_QUEUE_STRUCT = new HashMap<>();
@@ -23,7 +20,7 @@ public class MasterQueue {
     public void pushToQueue(String queueName, Object content) {
         Queue<Object> queue;
         if (!MAP_QUEUE_STRUCT.containsKey(queueName)) {
-            queue = new PriorityQueue<>();
+            queue = new LinkedList<>();
         } else {
             queue = MAP_QUEUE_STRUCT.get(queueName);
         }

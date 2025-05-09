@@ -41,14 +41,15 @@ public class ProtocolMessageParser {
         Arrays.stream(split)
                 .filter(s -> s.contains("timestamp"))
                 .findFirst()
+                .map(value -> value.replaceAll("--timestamp:", "").trim())
                 .ifPresent(value -> protocolTransferObject
-                        .setTimestamp(Instant.ofEpochMilli(Long.parseLong(value.replaceAll("--timestamp:", "").trim()))));
+                        .setTimestamp(Instant.parse(value.trim())));
 
         Arrays.stream(split)
                 .filter(s -> s.contains("contents"))
                 .findFirst()
                 .ifPresent(value -> protocolTransferObject
-                        .setContents(value.replaceAll("--contents:", "").trim().getBytes()));
+                        .setContents(value.replaceAll("--contents:", "").trim()));
 
         return protocolTransferObject;
     }
@@ -57,15 +58,4 @@ public class ProtocolMessageParser {
         return message.toString();
     }
 
-    public static void main(String[] args) {
-        String example = """
-                --message: PRODUCE
-                        --destination: QUEUE
-                        --address: queue.command.order.purchase
-                        --timestamp: 12314214141
-                        --authentication: base64(admin:1234)
-                        --contents: [a3fe2c4]""";
-        ProtocolTransferObject protocolTransferObject = ProtocolMessageParser.fromString(example);
-        System.out.println(protocolTransferObject);
-    }
 }

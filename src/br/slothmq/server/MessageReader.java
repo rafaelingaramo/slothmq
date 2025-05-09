@@ -2,6 +2,8 @@ package br.slothmq.server;
 
 import br.slothmq.protocol.ProtocolMessageParser;
 import br.slothmq.protocol.ProtocolTransferObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,6 +12,7 @@ import java.net.Socket;
 
 public class MessageReader {
     private static final MessageReader INSTANCE = new MessageReader();
+    private static final Logger LOG = LoggerFactory.getLogger(MessageReader.class);
 
     public static MessageReader getInstance() {
         return INSTANCE;
@@ -37,13 +40,8 @@ public class MessageReader {
             }
         } catch (IOException e) {
             //do nothing for now throw in  the future
-        } finally {
-            try {
-                socketClient.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e); //? TODO review this
-            }
+            LOG.error("exception", e);
+            throw new RuntimeException(e);
         }
-        return null;
     }
 }
