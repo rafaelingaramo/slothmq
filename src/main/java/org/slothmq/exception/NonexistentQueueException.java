@@ -1,4 +1,4 @@
-package br.slothmq.exception;
+package org.slothmq.exception;
 
 public class NonexistentQueueException extends RuntimeException {
     public NonexistentQueueException(String queueName) {

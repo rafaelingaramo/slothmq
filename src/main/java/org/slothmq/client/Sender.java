@@ -1,8 +1,8 @@
-package br.slothmq.client;
+package org.slothmq.client;
 
-import br.slothmq.exception.IncommunicableException;
-import br.slothmq.protocol.ProtocolMessageParser;
-import br.slothmq.protocol.ProtocolTransferObject;
+import org.slothmq.exception.IncommunicableException;
+import org.slothmq.protocol.ProtocolMessageParser;
+import org.slothmq.protocol.ProtocolTransferObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-package br.slothmq.protocol;
+package org.slothmq.protocol;
 
 public enum DestinationType {
     QUEUE, TOPIC

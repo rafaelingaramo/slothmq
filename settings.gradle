@@ -1,0 +1,3 @@
+include 'src:java'
+findProject(':src:java')?.name = 'java'
+

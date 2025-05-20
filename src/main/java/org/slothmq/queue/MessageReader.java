@@ -1,7 +1,7 @@
-package br.slothmq.server;
+package org.slothmq.queue;
 
-import br.slothmq.protocol.ProtocolMessageParser;
-import br.slothmq.protocol.ProtocolTransferObject;
+import org.slothmq.protocol.ProtocolMessageParser;
+import org.slothmq.protocol.ProtocolTransferObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

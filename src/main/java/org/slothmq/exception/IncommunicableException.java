@@ -1,4 +1,4 @@
-package br.slothmq.exception;
+package org.slothmq.exception;
 
 public class IncommunicableException extends RuntimeException {
     public IncommunicableException(Exception e) {

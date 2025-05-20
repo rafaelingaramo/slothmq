@@ -1,4 +1,4 @@
-package br.slothmq.protocol;
+package org.slothmq.protocol;
 
 import java.time.Instant;
 
