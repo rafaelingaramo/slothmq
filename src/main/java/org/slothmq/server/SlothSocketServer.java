@@ -21,9 +21,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 //TODO shutdown hook, remove pool resources
-public class SocketServer {
+public class SlothSocketServer {
     public static final MongoDatabase mongoDatabase;
-    private static final Logger LOG = LoggerFactory.getLogger(SocketServer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SlothSocketServer.class);
     private static final ScheduledExecutorService CONSUMER_THREAD_POOL = Executors.newScheduledThreadPool(100);
     private static final ExecutorService PRODUCER_SERVICE_POOL = Executors.newFixedThreadPool(100);
 

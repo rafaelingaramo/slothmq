@@ -7,7 +7,7 @@ import com.mongodb.client.MongoDatabase;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slothmq.server.SocketServer;
+import org.slothmq.server.SlothSocketServer;
 
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -16,7 +16,7 @@ public class MasterQueue {
     private static final Logger LOG = LoggerFactory.getLogger(MasterQueue.class);
     private static final Map<String, Queue<Object>> MAP_QUEUE_STRUCT = new HashMap<>();
     private static final MasterQueue INSTANCE = new MasterQueue();
-    private static final MongoDatabase database = SocketServer.mongoDatabase;
+    private static final MongoDatabase database = SlothSocketServer.mongoDatabase;
     private static final String PRODUCER_KEY = "MasterQueue.Producer";
     private static final String CONSUMER_KEY = "MasterQueue.Consumer";
 
