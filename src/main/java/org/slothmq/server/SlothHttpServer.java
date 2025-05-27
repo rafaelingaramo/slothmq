@@ -19,7 +19,7 @@ public class SlothHttpServer {
         LOG.info("Initializing web server");
         try {
             HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
-            server.createContext("/messages", withCors(new QueueMessageHandler()));
+            server.createContext("/api/messages", withCors(new QueueMessageHandler()));
             server.setExecutor(null);
             server.start();
             LOG.info("Web server initialized");

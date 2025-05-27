@@ -2,18 +2,24 @@ package org.slothmq.web.service;
 
 import com.mongodb.client.*;
 import com.mongodb.client.model.Aggregates;
+import com.mongodb.client.result.DeleteResult;
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.slothmq.dto.Tuple;
+import org.slothmq.exception.UnableToPurgeException;
 import org.slothmq.mongo.MongoConnector;
+import org.slothmq.queue.MasterQueue;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class QueueMessagesService {
-    public MongoDatabase mongoDatabase;
+    private final MongoDatabase mongoDatabase;
+    private final MasterQueue masterQueue;
 
     public QueueMessagesService() {
         this.mongoDatabase = MongoConnector.getDatabaseInstance();
+        this.masterQueue = MasterQueue.getInstance();
     }
 
     public List<Tuple<String, String>> getQueueNames() {
@@ -30,5 +36,16 @@ public class QueueMessagesService {
                 });
 
         return queueList;
+    }
+
+    public void purgeFromCollection(String collectionName) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(collectionName);
+        DeleteResult deleteResult = collection.deleteMany(BsonDocument.parse("{}"));
+        boolean acknowledged = deleteResult.wasAcknowledged();
+        if (!acknowledged) {
+            throw new UnableToPurgeException(collectionName);
+        }
+
+        masterQueue.deleteFromQueue(collectionName);
     }
 }

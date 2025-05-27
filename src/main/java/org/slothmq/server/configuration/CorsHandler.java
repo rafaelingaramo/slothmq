@@ -19,7 +19,7 @@ public class CorsHandler implements HttpHandler {
         String origin = exchange.getRequestHeaders().getFirst("Origin");
 
         // Allow only localhost origin
-        if ("http://localhost:5173".equals(origin)) {
+        if (origin != null && (origin.contains("localhost:5173") || origin.contains("127.0.0.1:5173"))) {
             headers.add("Access-Control-Allow-Origin", origin);
             headers.add("Access-Control-Allow-Headers", "Content-Type");
             headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");

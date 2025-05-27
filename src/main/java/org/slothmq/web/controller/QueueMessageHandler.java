@@ -14,6 +14,8 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class QueueMessageHandler implements HttpHandler {
     private final QueueMessagesService queueMessagesService;
@@ -27,17 +29,32 @@ public class QueueMessageHandler implements HttpHandler {
         routeRequests(exchange);
     }
 
-    @WebRoute(routeRegexp = "/messages$", method = "GET")
+    @WebRoute(routeRegexp = "/api/messages$", method = "GET")
     public void getAll(HttpExchange exchange) throws IOException  {
         List<Tuple<String, String>> queueNames = queueMessagesService.getQueueNames();
 
         if (queueNames == null || queueNames.isEmpty()) {
-            printRawResponse(exchange, "[]", 204);
+            printRawResponse(exchange, "[]", 200);
             return;
         }
 
         ObjectMapper mapper = new ObjectMapper();
         printRawResponse(exchange, mapper.writeValueAsString(queueNames), 200);
+    }
+
+    @WebRoute(routeRegexp = "/api/messages/([\\w\\-.]+)$", method = "DELETE")
+    public void purgeMessages(HttpExchange exchange) throws IOException  {
+        String path = exchange.getRequestURI().getPath();
+        Pattern pattern = Pattern.compile("/api/messages/([\\w\\-.]+)");
+        Matcher matcher = pattern.matcher(path);
+        if (!matcher.find()) {
+            throw new RuntimeException();
+        }
+        String pathParameter = matcher.group(1);
+
+        queueMessagesService.purgeFromCollection(pathParameter);
+
+        printEmptyResponse(exchange, 204);
     }
 
     //TODO if I want to have a separated route, use like this.
@@ -84,6 +101,9 @@ public class QueueMessageHandler implements HttpHandler {
         }
     }
 
+    private void printEmptyResponse(HttpExchange exchange, Integer httpCode) throws IOException {
+        exchange.sendResponseHeaders(httpCode, 0);
+    }
 
     private void printRawResponse(HttpExchange exchange, String response, Integer httpCode) throws IOException {
         exchange.sendResponseHeaders(httpCode, response.getBytes().length);

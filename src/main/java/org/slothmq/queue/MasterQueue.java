@@ -31,6 +31,7 @@ public class MasterQueue {
         LOG.info("Initialization complete");
     }
 
+    //TODO make it singleton by making the constructor private
     public static MasterQueue getInstance() {
         return INSTANCE;
     }
@@ -69,5 +70,15 @@ public class MasterQueue {
 
         collection.find().batchSize(100)
                 .forEach(item -> MAP_QUEUE_STRUCT.get(queue).add(item));
+    }
+
+    public void deleteFromQueue(String queueName) {
+        if (!MAP_QUEUE_STRUCT.containsKey(queueName)) {
+            throw new NonexistentQueueException(queueName);
+        }
+
+        synchronized (MasterQueue.class) {
+            MAP_QUEUE_STRUCT.get(queueName).clear();
+        }
     }
 }
