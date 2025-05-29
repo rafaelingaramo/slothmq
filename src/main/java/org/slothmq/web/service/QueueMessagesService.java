@@ -11,6 +11,7 @@ import org.slothmq.mongo.MongoConnector;
 import org.slothmq.queue.MasterQueue;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class QueueMessagesService {
@@ -22,20 +23,25 @@ public class QueueMessagesService {
         this.masterQueue = MasterQueue.getInstance();
     }
 
-    public List<Tuple<String, String>> getQueueNames() {
+    public List<Tuple<String, Integer>> getQueueNames() {
         ListCollectionNamesIterable collections = mongoDatabase.listCollectionNames();
 
-        List<Tuple<String, String>> queueList = new ArrayList<>();
+        List<Tuple<String, Integer>> queueList = new ArrayList<>();
         collections
                 .batchSize(0)
                 .forEach(collectionName -> {
                     MongoCollection<Document> mongoCollection = mongoDatabase.getCollection(collectionName);
                     mongoCollection.aggregate(List.of(Aggregates.count("totalDocuments")))
-                            .map(Document::toJson)
+                            .map(d -> (Integer)d.get("totalDocuments"))
                             .forEach(s -> queueList.add(new Tuple<>(collectionName, s)));
                 });
 
-        return queueList;
+        return queueList.stream()
+                .sorted(Comparator
+                        .comparing((Tuple<String, Integer> t) -> t.getValue())
+                        .reversed()
+                        .thenComparing(Tuple::getKey))
+                .toList();
     }
 
     public void purgeFromCollection(String collectionName) {
