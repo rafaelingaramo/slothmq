@@ -1,10 +1,25 @@
 package org.slothmq.server;
 
+import org.slothmq.server.configuration.SlothNettyWebSocketServer;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class Server {
-    //TODO the socket server should be a thread of is own, in order to not block any other connections.
-    public static void main(String[] args) {
-        new SlothHttpServer().start();
-        new SlothSocketServer().start();
+    public static void main(String[] args) throws Exception {
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+
+        executorService.submit(() -> new SlothHttpServer().start());
+        executorService.submit(() -> new SlothSocketServer().start());
+        executorService.submit(() -> {
+            try {
+                new SlothNettyWebSocketServer().start();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        Thread.currentThread().join();
         //TODO use NIO for non-blocking communication
     }
 }

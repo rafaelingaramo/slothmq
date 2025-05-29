@@ -13,4 +13,5 @@ dependencies {
     implementation 'com.h2database:h2:2.3.232'
     implementation 'ch.qos.logback:logback-classic:1.5.18'
     implementation 'org.mongodb:mongodb-driver-sync:5.5.0'
+    implementation 'io.netty:netty-all:4.1.107.Final'
 }

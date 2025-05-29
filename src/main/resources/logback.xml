@@ -1,5 +1,6 @@
 <configuration>
 
+    <appender name="WS" class="org.slothmq.server.logappender.WebSocketLogAppender"/>
     <!-- Console Appender -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -13,6 +14,7 @@
     <!-- Root Logger -->
     <root level="INFO">
         <appender-ref ref="STDOUT" />
+        <appender-ref ref="WS"/>
     </root>
 
 </configuration>
