@@ -6,8 +6,8 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LogWebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
-    private static final Logger LOG = LoggerFactory.getLogger(LogWebSocketHandler.class);
+public class MetricsWebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
+    private static final Logger LOG = LoggerFactory.getLogger(MetricsWebSocketHandler.class);
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {

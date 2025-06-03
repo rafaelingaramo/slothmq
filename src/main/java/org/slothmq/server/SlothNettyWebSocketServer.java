@@ -1,4 +1,4 @@
-package org.slothmq.server.configuration;
+package org.slothmq.server;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -14,7 +14,13 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slothmq.server.jmx.JmxMetricsCollector;
 import org.slothmq.server.websocket.LogWebSocketHandler;
+import org.slothmq.server.websocket.MetricsWebSocketHandler;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class SlothNettyWebSocketServer {
     private static final Logger LOG = LoggerFactory.getLogger(SlothNettyWebSocketServer.class);
@@ -38,11 +44,14 @@ public class SlothNettyWebSocketServer {
                             pipeline.addLast(new ChunkedWriteHandler());
                             pipeline.addLast(new WebSocketServerProtocolHandler("/ws"));
                             pipeline.addLast(new LogWebSocketHandler());
+                            pipeline.addLast(new WebSocketServerProtocolHandler("/metrics"));
+                            pipeline.addLast(new MetricsWebSocketHandler());
                         }
                     });
 
             Channel ch = b. bind(PORT).sync().channel();
             LOG.info("WebSocket server started at ws://localhost:" + PORT + "/ws");
+            this.startMetricsThread();
             ch.closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();
@@ -50,4 +59,8 @@ public class SlothNettyWebSocketServer {
         }
     }
 
+    private void startMetricsThread() {
+        ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutor.scheduleAtFixedRate(JmxMetricsCollector::collectAndPush, 0, 15, TimeUnit.SECONDS);
+    }
 }

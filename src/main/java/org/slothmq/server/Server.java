@@ -1,7 +1,5 @@
 package org.slothmq.server;
 
-import org.slothmq.server.configuration.SlothNettyWebSocketServer;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,7 +16,6 @@ public class Server {
                 throw new RuntimeException(e);
             }
         });
-
         Thread.currentThread().join();
         //TODO use NIO for non-blocking communication
     }
