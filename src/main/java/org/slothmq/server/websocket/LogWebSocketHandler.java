@@ -1,13 +1,19 @@
 package org.slothmq.server.websocket;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ChannelHandler.Sharable
 public class LogWebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
     private static final Logger LOG = LoggerFactory.getLogger(LogWebSocketHandler.class);
+
+    public LogWebSocketHandler() {
+        System.out.println("constructor");
+    }
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {

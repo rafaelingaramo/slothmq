@@ -1,22 +1,28 @@
 package org.slothmq.server.websocket;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@ChannelHandler.Sharable
 public class MetricsWebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
     private static final Logger LOG = LoggerFactory.getLogger(MetricsWebSocketHandler.class);
 
+    public MetricsWebSocketHandler() {
+        System.out.println("constructor");
+    }
+
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {
-        LogWebSocketBroadcaster.register(ctx.channel());
+        MetricsWebSocketBroadcaster.register(ctx.channel());
     }
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) {
-        LogWebSocketBroadcaster.unregister(ctx.channel());
+        MetricsWebSocketBroadcaster.unregister(ctx.channel());
     }
     
     @Override
@@ -26,7 +32,7 @@ public class MetricsWebSocketHandler extends SimpleChannelInboundHandler<TextWeb
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame textWebSocketFrame) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame textWebSocketFrame) {
         //ignore input
     }
 }

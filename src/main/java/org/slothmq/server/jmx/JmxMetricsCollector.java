@@ -1,45 +1,67 @@
 package org.slothmq.server.jmx;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slothmq.server.websocket.MetricsWebSocketBroadcaster;
 
 import java.lang.management.*;
 import java.util.List;
+import java.util.Optional;
 
 public class JmxMetricsCollector {
     private static final Logger LOG = LoggerFactory.getLogger(JmxMetricsCollector.class);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public static void collectAndPush() {
+        LOG.info("JMX memory collector triggered");
+
         MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
         MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
         MemoryUsage nonHeapMemoryUsage = memoryMXBean.getNonHeapMemoryUsage();
-
-        List<GarbageCollectorMXBean> garbageCollectorMXBeans = ManagementFactory.getGarbageCollectorMXBeans();
-        garbageCollectorMXBeans.forEach(gcMXBean -> {
-            String name = gcMXBean.getName();
-            long collectionCount = gcMXBean.getCollectionCount();
-            long collectionTime = gcMXBean.getCollectionTime();
-            String[] memoryPoolNames = gcMXBean.getMemoryPoolNames();
-            LOG.info("GC: {} collection count: {}, collection time: {}, memoryPoolNames: {}",
-                    name, collectionCount, collectionTime, memoryPoolNames);
-        });
-
-        LOG.info("JMX memory collector triggered");
-        LOG.info("heap- commited: {}, init: {}, max: {}, used: {}", heapMemoryUsage.getCommitted(),
-                heapMemoryUsage.getInit(), heapMemoryUsage.getMax(), heapMemoryUsage.getUsed());
-        LOG.info("non heap- commited: {}, init: {}, max: {}, used: {}", nonHeapMemoryUsage.getCommitted(),
-                nonHeapMemoryUsage.getInit(), nonHeapMemoryUsage.getMax(), nonHeapMemoryUsage.getUsed());
-
-
         ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
-        LOG.info("Threads: {}, {}, {}", threadMXBean.getDaemonThreadCount(), threadMXBean.getPeakThreadCount(),
-                threadMXBean.getTotalStartedThreadCount());
-
         com.sun.management.OperatingSystemMXBean operatingSystemMXBean
                 = (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-        LOG.info("OS Information: {}, {}, {}, {}, {}, {}, {}, {}", operatingSystemMXBean.getName(),
-                operatingSystemMXBean.getCommittedVirtualMemorySize(), operatingSystemMXBean.getFreeMemorySize(),
-                operatingSystemMXBean.getCpuLoad(), operatingSystemMXBean.getFreeSwapSpaceSize(), operatingSystemMXBean.getTotalMemorySize(),
-                operatingSystemMXBean.getTotalSwapSpaceSize(), operatingSystemMXBean.getProcessCpuTime());
+        List<GarbageCollectorMXBean> garbageCollectorMXBeans = ManagementFactory.getGarbageCollectorMXBeans();
+
+        List<GCMetrics> gcMetrics = garbageCollectorMXBeans.stream().map(garbageCollectorMXBean ->
+                new GCMetrics(garbageCollectorMXBean.getName(), garbageCollectorMXBean.getCollectionCount(), garbageCollectorMXBean.getCollectionTime())
+        ).toList();
+
+        MemoryMetrics heapMetrics = Optional.of(heapMemoryUsage)
+                .map(memoryUsage -> new MemoryMetrics(memoryUsage.getInit(), memoryUsage.getMax(), memoryUsage.getUsed()))
+                .orElseThrow();
+
+        MemoryMetrics nonHeapMetrics = Optional.of(nonHeapMemoryUsage)
+                .map(memoryUsage -> new MemoryMetrics(memoryUsage.getInit(), memoryUsage.getMax(), memoryUsage.getUsed()))
+                .orElseThrow();
+
+        ThreadMetrics threadMetrics = Optional.of(threadMXBean)
+                .map(threadMx -> new ThreadMetrics(threadMx.getThreadCount(),
+                        threadMx.getDaemonThreadCount(),
+                        threadMx.getPeakThreadCount(),
+                        threadMx.getTotalStartedThreadCount()))
+                .orElseThrow();
+
+        OSMetrics osMetrics = Optional.of(operatingSystemMXBean)
+                .map(osMx -> new OSMetrics(osMx.getName(),
+                        osMx.getCommittedVirtualMemorySize(),
+                        osMx.getFreeMemorySize(),
+                        osMx.getCpuLoad(),
+                        osMx.getFreeSwapSpaceSize(),
+                        osMx.getTotalMemorySize(),
+                        osMx.getTotalSwapSpaceSize(),
+                        osMx.getProcessCpuTime()))
+                .orElseThrow();
+
+        JmxMetrics jmxMetrics = new JmxMetrics(gcMetrics, heapMetrics, nonHeapMetrics, threadMetrics, osMetrics);
+        try {
+            String jsonMetrics = MAPPER.writeValueAsString(jmxMetrics);
+            MetricsWebSocketBroadcaster.broadcast(jsonMetrics);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        LOG.info("JMX memory collector finished");
     }
 }

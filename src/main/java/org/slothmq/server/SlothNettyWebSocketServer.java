@@ -1,10 +1,7 @@
 package org.slothmq.server;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -14,20 +11,13 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slothmq.server.jmx.JmxMetricsCollector;
-import org.slothmq.server.websocket.LogWebSocketHandler;
-import org.slothmq.server.websocket.MetricsWebSocketHandler;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class SlothNettyWebSocketServer {
     private static final Logger LOG = LoggerFactory.getLogger(SlothNettyWebSocketServer.class);
-    private static final int PORT = 8081;
 
-    public void start() throws InterruptedException {
-        LOG.info("starting WebSocket channel on port 8081");
+
+    public void start(int port, String path, SimpleChannelInboundHandler<?> handler) throws InterruptedException {
+        LOG.info("starting WebSocket channel on port {}", port);
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
@@ -42,16 +32,13 @@ public class SlothNettyWebSocketServer {
                             pipeline.addLast(new HttpServerCodec());
                             pipeline.addLast(new HttpObjectAggregator(65536));
                             pipeline.addLast(new ChunkedWriteHandler());
-                            pipeline.addLast(new WebSocketServerProtocolHandler("/ws"));
-                            pipeline.addLast(new LogWebSocketHandler());
-                            pipeline.addLast(new WebSocketServerProtocolHandler("/metrics"));
-                            pipeline.addLast(new MetricsWebSocketHandler());
+                            pipeline.addLast(new WebSocketServerProtocolHandler(path));
+                            pipeline.addLast(handler);
                         }
                     });
 
-            Channel ch = b. bind(PORT).sync().channel();
-            LOG.info("WebSocket server started at ws://localhost:" + PORT + "/ws");
-            this.startMetricsThread();
+            Channel ch = b.bind(port).sync().channel();
+            LOG.info("WebSocket server started at ws://localhost:{}{}", port, path);
             ch.closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();
@@ -59,8 +46,4 @@ public class SlothNettyWebSocketServer {
         }
     }
 
-    private void startMetricsThread() {
-        ScheduledExecutorService scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
-        scheduledExecutor.scheduleAtFixedRate(JmxMetricsCollector::collectAndPush, 0, 15, TimeUnit.SECONDS);
-    }
 }
