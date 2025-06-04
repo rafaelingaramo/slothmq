@@ -1,4 +1,4 @@
-package org.slothmq.web.service;
+package org.slothmq.server.web.service;
 
 import com.mongodb.client.*;
 import com.mongodb.client.model.Aggregates;

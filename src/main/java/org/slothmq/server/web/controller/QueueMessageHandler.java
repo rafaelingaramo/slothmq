@@ -1,11 +1,11 @@
-package org.slothmq.web.controller;
+package org.slothmq.server.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import org.slothmq.dto.Tuple;
-import org.slothmq.web.SlothHttpHandler;
-import org.slothmq.web.annotation.WebRoute;
-import org.slothmq.web.service.QueueMessagesService;
+import org.slothmq.server.web.SlothHttpHandler;
+import org.slothmq.server.web.annotation.WebRoute;
+import org.slothmq.server.web.service.QueueMessagesService;
 
 import java.io.IOException;
 import java.util.List;

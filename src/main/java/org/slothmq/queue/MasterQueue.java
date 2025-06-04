@@ -36,6 +36,7 @@ public class MasterQueue {
         return INSTANCE;
     }
 
+    //TODO don't use mongo directly, use by the service layer
     public void pushToQueue(String queueName, Object content) {
         Queue<Object> queue;
         if (!MAP_QUEUE_STRUCT.containsKey(queueName)) {

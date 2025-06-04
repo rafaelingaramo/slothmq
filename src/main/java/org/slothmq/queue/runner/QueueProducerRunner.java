@@ -13,7 +13,6 @@ public class QueueProducerRunner implements Runnable {
     @Override
     public void run() {
         //adds message to database + adds onto the queue to be consumed, needs to be async
-        //TODO not into database yet
         MasterQueue.getInstance().pushToQueue(letter.getAddress(), letter.getContents());
     }
 }

@@ -1,4 +1,4 @@
-package org.slothmq.web.annotation;
+package org.slothmq.server.web.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

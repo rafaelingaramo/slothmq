@@ -1,8 +1,8 @@
-package org.slothmq.web;
+package org.slothmq.server.web;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import org.slothmq.web.annotation.WebRoute;
+import org.slothmq.server.web.annotation.WebRoute;
 
 import java.io.IOException;
 import java.io.OutputStream;
