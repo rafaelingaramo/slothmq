@@ -12,6 +12,7 @@ public class Server {
 
         executorService.submit(() -> new SlothHttpServer().start());
         executorService.submit(() -> new SlothSocketServer().start());
+        //TODO verify if there's a way to skip the handler by using overload methods
         executorService.submit(() -> {
             try {
                 new SlothNettyWebSocketServer().start(8081, "/logs", new LogWebSocketHandler());

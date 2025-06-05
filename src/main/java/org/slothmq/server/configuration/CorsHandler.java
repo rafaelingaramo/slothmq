@@ -3,11 +3,14 @@ package org.slothmq.server.configuration;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class CorsHandler implements HttpHandler {
     private final HttpHandler next;
+    private static final Logger LOG = LoggerFactory.getLogger(CorsHandler.class);
 
     public CorsHandler(HttpHandler next) {
         this.next = next;
@@ -31,7 +34,13 @@ public class CorsHandler implements HttpHandler {
             return;
         }
 
-        next.handle(exchange); // continue with actual handler
+        try {
+            // continue with actual handler
+            next.handle(exchange);
+        } catch (Exception e) {
+            LOG.error("exception routing the request", e);
+            throw e;
+        }
     }
 
     public static HttpHandler withCors(HttpHandler handler) {

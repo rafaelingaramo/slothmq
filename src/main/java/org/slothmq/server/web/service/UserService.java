@@ -1,12 +1,20 @@
 package org.slothmq.server.web.service;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Sorts;
+import io.netty.handler.codec.base64.Base64Encoder;
 import org.bson.BsonDocument;
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slothmq.exception.InvalidUserException;
 import org.slothmq.mongo.MongoConnector;
+import org.slothmq.server.user.User;
+import org.slothmq.server.user.UserMapper;
+import org.slothmq.server.web.dto.PageRequest;
 
 import java.util.*;
 
@@ -35,13 +43,56 @@ public class UserService {
                 .append("passkey", new String(Base64.getEncoder().encode(BASE_USER_PASSKEY.getBytes())))
                 .append("accessGroup", BASE_USER_ACCESS_GROUP));
         //TODO swallowing error here
+
         LOG.info("User collection initialized");
     }
 
-
-
-    public List<?> listPaged(Object pageRequest) {
+    public List<User> listPaged(PageRequest pageRequest) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
-        return null;
+
+        PageRequest.Sort sort = pageRequest.sort();
+        int skip = (pageRequest.page() - 1) * pageRequest.pageSize();
+
+        if (sort != null) {
+            return collection.find()
+                    .sort(sort.order() == PageRequest.Sort.SortOrder.ASC ? Sorts.ascending(sort.field()) :
+                            Sorts.descending(sort.field()))
+                    .skip(skip)
+                    .limit(pageRequest.pageSize())
+                    .into(new ArrayList<>())
+                    .stream()
+                    .map(UserMapper::from)
+                    .toList();
+        }
+
+        return collection.find()
+                .skip(skip)
+                .limit(pageRequest.pageSize())
+                .into(new ArrayList<>())
+                .stream()
+                .map(UserMapper::from)
+                .toList();
+    }
+
+    public User insertOne(User user) {
+        if (user.name() == null ||
+            user.accessGroups() == null ||
+            user.passkey() == null) {
+            throw new InvalidUserException("One or more fields are missing");
+        }
+
+        MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
+        BsonValue insertedId = collection.insertOne(new Document("id", UUID.randomUUID().toString())
+                .append("name", user.name())
+                .append("passKey", new String(Base64.getEncoder().encode(user.passkey().getBytes())))
+                .append("accessGroup", user.accessGroups())).getInsertedId();
+
+        assert insertedId != null;
+
+        return Optional.ofNullable(collection.find(new Document("_id", insertedId))
+                        .first())
+                .map(UserMapper::from)
+                .orElseThrow();
     }
 }
+//TODO can I have transactions on mongo?

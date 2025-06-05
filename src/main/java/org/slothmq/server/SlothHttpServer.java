@@ -22,11 +22,12 @@ public class SlothHttpServer {
             HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
             server.createContext("/api/messages", withCors(new QueueMessageHandler()));
             server.createContext("/api/users", withCors(new UserHandler()));
+            //TODO make the executor handle exceptions and/or other errors
             server.setExecutor(null);
             server.start();
             LOG.info("Web server initialized");
             new UserService().initUserCollectionIfNeeded();
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOG.error("Exception trying to initialize HTTP Server on 8080", e);
             throw new RuntimeException(e);
         }

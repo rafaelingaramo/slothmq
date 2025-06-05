@@ -1,6 +1,5 @@
 package org.slothmq.server.web.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import org.slothmq.dto.Tuple;
 import org.slothmq.server.web.SlothHttpHandler;
@@ -12,7 +11,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class QueueMessageHandler implements SlothHttpHandler {
+public class QueueMessageHandler extends SlothHttpHandler {
     private final QueueMessagesService queueMessagesService;
 
     public QueueMessageHandler() {
@@ -28,8 +27,7 @@ public class QueueMessageHandler implements SlothHttpHandler {
             return;
         }
 
-        ObjectMapper mapper = new ObjectMapper();
-        printRawResponse(exchange, mapper.writeValueAsString(queueNames), 200);
+        printRawResponse(exchange, queueNames, 200);
     }
 
     @WebRoute(routeRegexp = "/api/messages/([\\w\\-.]+)$", method = "DELETE")
