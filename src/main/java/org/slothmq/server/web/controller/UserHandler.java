@@ -1,7 +1,5 @@
 package org.slothmq.server.web.controller;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import org.slothmq.server.user.User;
 import org.slothmq.server.web.SlothHttpHandler;
@@ -11,6 +9,9 @@ import org.slothmq.server.web.service.UserService;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UserHandler extends SlothHttpHandler {
     private final UserService userService;
@@ -38,5 +39,34 @@ public class UserHandler extends SlothHttpHandler {
         User createdUser = userService.insertOne(user);
 
         printRawResponse(exchange, createdUser, 201);
+    }
+
+    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)$", method = "DELETE")
+    public void deleteOne(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        Pattern pattern = Pattern.compile("/api/users/([\\w\\-.]+)$");
+        Matcher matcher = pattern.matcher(path);
+        if (!matcher.find()) {
+            throw new RuntimeException();
+        }
+        String pathParameter = matcher.group(1);
+
+        userService.removeOne(pathParameter);
+        printEmptyResponse(exchange, 204);
+    }
+
+    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)$", method = "PUT")
+    public void editOne(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        Pattern pattern = Pattern.compile("/api/users/([\\w\\-.]+)$");
+        Matcher matcher = pattern.matcher(path);
+        if (!matcher.find()) {
+            throw new RuntimeException();
+        }
+        String pathParameter = matcher.group(1);
+        User user = extractRequestBody(exchange, User.class);
+
+        userService.editOne(pathParameter, user);
+        printEmptyResponse(exchange, 204);
     }
 }

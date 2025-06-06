@@ -22,6 +22,8 @@ public class SlothNettyWebSocketServer {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
         try {
+            //https://github.com/netty/netty/blob/4.2/example/src/main/java/io/netty/example/http/websocketx/server/WebSocketServer.java
+            //https://github.com/netty/netty/blob/4.2/example/src/main/java/io/netty/example/http/websocketx/server/WebSocketIndexPageHandler.java
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
