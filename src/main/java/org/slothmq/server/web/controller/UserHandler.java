@@ -5,11 +5,10 @@ import org.slothmq.server.user.User;
 import org.slothmq.server.web.SlothHttpHandler;
 import org.slothmq.server.web.annotation.WebRoute;
 import org.slothmq.server.web.dto.PageRequest;
+import org.slothmq.server.web.dto.Paged;
 import org.slothmq.server.web.service.UserService;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -23,7 +22,7 @@ public class UserHandler extends SlothHttpHandler {
     @WebRoute(routeRegexp = "/api/users.*?", method = "GET")
     public void getAll(HttpExchange exchange) throws IOException  {
         PageRequest pageRequest = extractPageRequest(exchange);
-        List<User> pagedUserList = userService.listPaged(pageRequest);
+        Paged<User> pagedUserList = userService.listPaged(pageRequest);
 
         if (pagedUserList == null || pagedUserList.isEmpty()) {
             printRawResponse(exchange, "[]", 200);
@@ -31,6 +30,26 @@ public class UserHandler extends SlothHttpHandler {
         }
 
         printRawResponse(exchange, pagedUserList, 200);
+    }
+
+    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)$", method = "GET")
+    public void findOne(HttpExchange exchange) throws IOException  {
+        String path = exchange.getRequestURI().getPath();
+        Pattern pattern = Pattern.compile("/api/users/([\\w\\-.]+)$");
+        Matcher matcher = pattern.matcher(path);
+        if (!matcher.find()) {
+            throw new RuntimeException();
+        }
+
+        String pathParameter = matcher.group(1);
+        User user = userService.findOne(pathParameter);
+
+        if (user == null) {
+            printRawResponse(exchange, "[]", 404);
+            return;
+        }
+
+        printRawResponse(exchange, user, 200);
     }
 
     @WebRoute(routeRegexp = "/api/users$", method = "POST")
@@ -67,6 +86,21 @@ public class UserHandler extends SlothHttpHandler {
         User user = extractRequestBody(exchange, User.class);
 
         userService.editOne(pathParameter, user);
+        printEmptyResponse(exchange, 204);
+    }
+
+    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)/password", method = "PUT")
+    public void changePassword(HttpExchange exchange) throws IOException {
+        String path = exchange.getRequestURI().getPath();
+        Pattern pattern = Pattern.compile("/api/users/([\\w\\-.]+)/password");
+        Matcher matcher = pattern.matcher(path);
+        if (!matcher.find()) {
+            throw new RuntimeException();
+        }
+        String pathParameter = matcher.group(1);
+        User user = extractRequestBody(exchange, User.class);
+
+        userService.changePassword(pathParameter, user);
         printEmptyResponse(exchange, 204);
     }
 }

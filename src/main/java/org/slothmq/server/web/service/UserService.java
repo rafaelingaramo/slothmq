@@ -14,6 +14,7 @@ import org.slothmq.mongo.MongoConnector;
 import org.slothmq.server.user.User;
 import org.slothmq.server.user.UserMapper;
 import org.slothmq.server.web.dto.PageRequest;
+import org.slothmq.server.web.dto.Paged;
 
 import java.util.*;
 
@@ -47,14 +48,14 @@ public class UserService {
         LOG.info("User collection initialized");
     }
 
-    public List<User> listPaged(PageRequest pageRequest) {
+    public Paged<User> listPaged(PageRequest pageRequest) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
 
         PageRequest.Sort sort = pageRequest.sort();
         int skip = (pageRequest.page() - 1) * pageRequest.pageSize();
 
         if (sort != null) {
-            return collection.find()
+            return new Paged<>(collection.find()
                     .sort(sort.order() == PageRequest.Sort.SortOrder.ASC ? Sorts.ascending(sort.field()) :
                             Sorts.descending(sort.field()))
                     .skip(skip)
@@ -62,30 +63,32 @@ public class UserService {
                     .into(new ArrayList<>())
                     .stream()
                     .map(UserMapper::from)
-                    .toList();
+                    .toList(), 1, 100);
         }
 
-        return collection.find()
+        return new Paged<>(collection.find()
                 .skip(skip)
                 .limit(pageRequest.pageSize())
                 .into(new ArrayList<>())
                 .stream()
                 .map(UserMapper::from)
-                .toList();
+                .toList(), 1, 100);
     }
 
     public User insertOne(User user) {
         if (user.name() == null ||
             user.accessGroups() == null ||
-            user.passkey() == null) {
+            user.passkey() == null ||
+            user.userName() == null) {
             throw new InvalidUserException("One or more fields are missing");
         }
 
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
         BsonValue insertedId = collection.insertOne(new Document("id", UUID.randomUUID().toString())
                 .append("name", user.name())
-                .append("passKey", new String(Base64.getEncoder().encode(user.passkey().getBytes())))
+                .append("passKey", new String(Base64.getEncoder().encode((user.userName() + ":" + user.passkey()).getBytes())))
                 .append("accessGroup", user.accessGroups())
+                .append("userName", user.userName())
                 .append("active", true)).getInsertedId();
 
         assert insertedId != null;
@@ -102,7 +105,7 @@ public class UserService {
         Document filter = new Document("id", identifier)
                 .append("active", true);
 
-        Document replacement = Optional.ofNullable(collection.find(filter)
+        Document replacement = Optional.ofNullable(collection.find( filter)
                         .first())
                 .orElseThrow();
         replacement.append("active", false);
@@ -122,8 +125,34 @@ public class UserService {
 
         replacement.append("active", user.active())
                 .append("accessGroup", user.accessGroups())
+                .append("userName", user.userName())
                 .append("name", user.name());
 
+        UpdateResult updateResult = collection.replaceOne(filter, replacement);
+        assert updateResult.getModifiedCount() == 1;
+    }
+
+    public User findOne(String identifier) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
+
+        Document filter = new Document("id", identifier);
+
+        Document result = Optional.ofNullable(collection.find(filter)
+                        .first())
+                .orElseThrow();
+
+        return UserMapper.from(result);
+    }
+
+    public void changePassword(String identifier, User user) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
+
+        Document filter = new Document("id", identifier);
+
+        Document replacement = Optional.ofNullable(collection.find(filter)
+                        .first())
+                .orElseThrow();
+        replacement.append("passKey", new String(Base64.getEncoder().encode((replacement.get("userName") + ":" + user.passkey()).getBytes())));
         UpdateResult updateResult = collection.replaceOne(filter, replacement);
         assert updateResult.getModifiedCount() == 1;
     }

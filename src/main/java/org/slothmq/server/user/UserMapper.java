@@ -13,6 +13,7 @@ public class UserMapper {
         return new User(UUID.fromString(document.get("id", String.class)),
                 document.get("name", String.class),
                 document.get("accessGroup", String.class),
+                document.get("userName", String.class),
                 null,
                 document.get("active", Boolean.class));
     }
