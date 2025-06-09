@@ -100,11 +100,12 @@ public class SlothHttpHandler implements HttpHandler {
         }
 
         Integer page = Integer.valueOf(queryParams.get("page"));
-        String pageSize = queryParams.get("pageSize");
+        String pageSize = queryParams.get("size");
         String sortField = queryParams.get("sortField");
         String sortOrder = queryParams.get("sortOrder");
+        String search = queryParams.get("search");
 
-        return PageRequest.parseOrGetDefaults(page, pageSize, sortField, sortOrder);
+        return PageRequest.parseOrGetDefaults(page, pageSize, sortField, sortOrder, search);
     }
 
     protected <T> T extractRequestBody(HttpExchange exchange, Class<T> clazz) throws IOException {

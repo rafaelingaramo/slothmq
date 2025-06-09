@@ -31,6 +31,7 @@ public class LogWebSocketHandler extends SimpleChannelInboundHandler<TextWebSock
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame textWebSocketFrame) throws Exception {
+        System.out.println("sout");
         //ignore input
     }
 }

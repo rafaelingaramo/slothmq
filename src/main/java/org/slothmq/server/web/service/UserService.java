@@ -2,11 +2,13 @@ package org.slothmq.server.web.service;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slothmq.exception.InvalidUserException;
@@ -20,6 +22,7 @@ import java.util.*;
 
 public class UserService {
     private final MongoDatabase mongoDatabase = MongoConnector.getDatabaseInstance();
+    private static final String BASE_USERNAME = "admin";
     private static final String USER_COLLECTION = "private.user.collection";
     //TODO inject through environment variable
     private static final String BASE_USER_PASSKEY = "admin:admin";
@@ -41,7 +44,8 @@ public class UserService {
         collection.insertOne(new Document("id", UUID.randomUUID().toString())
                 .append("name", BASE_USER_NAME)
                 .append("passkey", new String(Base64.getEncoder().encode(BASE_USER_PASSKEY.getBytes())))
-                .append("accessGroup", BASE_USER_ACCESS_GROUP)
+                .append("accessGroups", BASE_USER_ACCESS_GROUP)
+                .append("userName", BASE_USERNAME)
                 .append("active", true));
         //TODO swallowing error here
 
@@ -54,8 +58,13 @@ public class UserService {
         PageRequest.Sort sort = pageRequest.sort();
         int skip = (pageRequest.page() - 1) * pageRequest.pageSize();
 
+        Bson filter = pageRequest.search() != null ? Filters.regex("name", pageRequest.search(), "i")
+            : new BsonDocument();
+
+        long allDocuments = collection.countDocuments(filter);
+        List<User> userResult;
         if (sort != null) {
-            return new Paged<>(collection.find()
+            userResult = collection.find(filter)
                     .sort(sort.order() == PageRequest.Sort.SortOrder.ASC ? Sorts.ascending(sort.field()) :
                             Sorts.descending(sort.field()))
                     .skip(skip)
@@ -63,32 +72,33 @@ public class UserService {
                     .into(new ArrayList<>())
                     .stream()
                     .map(UserMapper::from)
-                    .toList(), 1, 100);
+                    .toList();
+        } else {
+            userResult = collection.find(filter)
+                    .skip(skip)
+                    .limit(pageRequest.pageSize())
+                    .into(new ArrayList<>())
+                    .stream()
+                    .map(UserMapper::from)
+                    .toList();
         }
 
-        return new Paged<>(collection.find()
-                .skip(skip)
-                .limit(pageRequest.pageSize())
-                .into(new ArrayList<>())
-                .stream()
-                .map(UserMapper::from)
-                .toList(), 1, 100);
+        return new Paged<>(userResult, (long)Math.ceil(allDocuments / (double)pageRequest.pageSize()), allDocuments);
     }
 
     public User insertOne(User user) {
-        if (user.name() == null ||
-            user.accessGroups() == null ||
-            user.passkey() == null ||
-            user.userName() == null) {
+        if (user.getName() == null ||
+            user.getAccessGroups() == null ||
+            user.getUserName() == null) {
             throw new InvalidUserException("One or more fields are missing");
         }
 
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
         BsonValue insertedId = collection.insertOne(new Document("id", UUID.randomUUID().toString())
-                .append("name", user.name())
-                .append("passKey", new String(Base64.getEncoder().encode((user.userName() + ":" + user.passkey()).getBytes())))
-                .append("accessGroup", user.accessGroups())
-                .append("userName", user.userName())
+                .append("name", user.getName())
+                .append("passKey", new String(Base64.getEncoder().encode((user.getUserName() + ":" + UUID.randomUUID()).getBytes())))
+                .append("accessGroups", String.join(",", user.getAccessGroups()))
+                .append("userName", user.getUserName())
                 .append("active", true)).getInsertedId();
 
         assert insertedId != null;
@@ -123,10 +133,10 @@ public class UserService {
                         .first())
                 .orElseThrow();
 
-        replacement.append("active", user.active())
-                .append("accessGroup", user.accessGroups())
-                .append("userName", user.userName())
-                .append("name", user.name());
+        replacement.append("active", user.getActive())
+                .append("accessGroups", user.getAccessGroups())
+                .append("userName", user.getUserName())
+                .append("name", user.getName());
 
         UpdateResult updateResult = collection.replaceOne(filter, replacement);
         assert updateResult.getModifiedCount() == 1;
@@ -152,7 +162,7 @@ public class UserService {
         Document replacement = Optional.ofNullable(collection.find(filter)
                         .first())
                 .orElseThrow();
-        replacement.append("passKey", new String(Base64.getEncoder().encode((replacement.get("userName") + ":" + user.passkey()).getBytes())));
+        replacement.append("passKey", new String(Base64.getEncoder().encode((replacement.get("userName") + ":" + user.getPasskey()).getBytes())));
         UpdateResult updateResult = collection.replaceOne(filter, replacement);
         assert updateResult.getModifiedCount() == 1;
     }
