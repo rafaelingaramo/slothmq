@@ -166,5 +166,15 @@ public class UserService {
         UpdateResult updateResult = collection.replaceOne(filter, replacement);
         assert updateResult.getModifiedCount() == 1;
     }
+
+    public User login(String base64Credentials) {
+        MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
+        Document filter = new Document("passkey", base64Credentials);
+        Document first = Optional.ofNullable(collection.find(filter)
+                        .first())
+                .orElseThrow(() -> new InvalidUserException("UserName or Password not found"));
+
+        return UserMapper.from(first);
+    }
 }
 //TODO can I have transactions on mongo?

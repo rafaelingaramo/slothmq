@@ -18,7 +18,7 @@ public class QueueMessageHandler extends SlothHttpHandler {
         this.queueMessagesService = new QueueMessagesService();
     }
 
-    @WebRoute(routeRegexp = "/api/messages$", method = "GET")
+    @WebRoute(routeRegexp = "/api/messages$", method = "GET", needsAuthentication = true, authorizationGroups = "viewer")
     public void getAll(HttpExchange exchange) throws IOException  {
         List<Tuple<String, Integer>> queueNames = queueMessagesService.getQueueNames();
 
@@ -30,7 +30,7 @@ public class QueueMessageHandler extends SlothHttpHandler {
         printRawResponse(exchange, queueNames, 200);
     }
 
-    @WebRoute(routeRegexp = "/api/messages/([\\w\\-.]+)$", method = "DELETE")
+    @WebRoute(routeRegexp = "/api/messages/([\\w\\-.]+)$", method = "DELETE", needsAuthentication = true, authorizationGroups = "admin")
     public void purgeMessages(HttpExchange exchange) throws IOException  {
         String path = exchange.getRequestURI().getPath();
         Pattern pattern = Pattern.compile("/api/messages/([\\w\\-.]+)");

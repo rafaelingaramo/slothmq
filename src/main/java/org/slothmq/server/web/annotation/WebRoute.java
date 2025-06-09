@@ -20,4 +20,18 @@ public @interface WebRoute {
      * @return the method
      */
     String method();
+
+    /**
+     * If the method to be executed needs to be authenticated
+     * @return true if it needs to be authenticated/false if not
+     */
+    boolean needsAuthentication() default false;
+
+    /**
+     * The necessary groups for authorizing the method if needed
+     * Only checked if needsAuthentication = true
+     * @return the comma separated groups that can access the method
+     * e.g: viewer,admin
+     */
+    String authorizationGroups() default "";
 }

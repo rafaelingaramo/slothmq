@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.slothmq.exception.InvalidUserException;
+import org.slothmq.exception.UnauthorizedAccessException;
+import org.slothmq.server.jwt.JwtUtil;
 import org.slothmq.server.web.annotation.WebRoute;
 import org.slothmq.server.web.dto.PageRequest;
 
@@ -13,15 +16,13 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * SlothHttpHandler is a default interface that allows the user to easily reuse print and or route methods inside its own controller
  */
 public class SlothHttpHandler implements HttpHandler {
-    static final ObjectMapper MAPPER;
+    private static final ObjectMapper MAPPER;
 
     static {
         MAPPER = new ObjectMapper();
@@ -44,8 +45,21 @@ public class SlothHttpHandler implements HttpHandler {
                             if (!(a instanceof WebRoute annotation)) {
                                 return false;
                             }
-                            return annotation.method().equals(requestMethod) &&
+                            boolean methodMatches = annotation.method().equals(requestMethod) &&
                                     requestURI.toString().matches(annotation.routeRegexp());
+
+                            if (!methodMatches) return false;
+
+
+                            if (annotation.needsAuthentication()) {
+                                checkAuthentication(exchange);
+                                //means that the method matches, although there's no authorization to it
+                                if (!annotation.authorizationGroups().isEmpty()) {
+                                    checkAuthorization(exchange, annotation.authorizationGroups());
+                                }
+                            }
+
+                            return true;
                         }))
                 .filter(m -> m.getParameterCount() == 1 && m.getParameterTypes()[0].equals(HttpExchange.class))
                 .findAny().orElseThrow();
@@ -117,5 +131,33 @@ public class SlothHttpHandler implements HttpHandler {
         }
 
         return MAPPER.readValue(builder.toString(), clazz);
+    }
+
+    private void checkAuthentication(HttpExchange exchange) {
+        String authentication = exchange.getRequestHeaders().getFirst("Authentication");
+
+        if (authentication == null || !authentication.startsWith("Bearer ")) {
+            throw new InvalidUserException("Invalid user/pass combination");
+        }
+
+        String base64Credentials = authentication.substring("Bearer ".length());
+        JwtUtil.verifyToken(base64Credentials);
+    }
+
+    private void checkAuthorization(HttpExchange exchange, String authGroups) {
+        String authentication = exchange.getRequestHeaders().getFirst("Authentication");
+
+        if (authentication == null || !authentication.startsWith("Bearer ")) {
+            throw new InvalidUserException("Invalid user/pass combination");
+        }
+
+        String base64Credentials = authentication.substring("Bearer ".length());
+        List<String> audience = JwtUtil.verifyAccessGroups(base64Credentials);
+        boolean hasAudience = audience.stream()
+                .anyMatch(a -> Arrays.asList(authGroups.split(",")).contains(a));
+
+        if (!hasAudience) {
+            throw new UnauthorizedAccessException(base64Credentials, authGroups);
+        }
     }
 }
