@@ -1,14 +1,18 @@
 package org.slothmq.server.web;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import org.slothmq.exception.InvalidUserException;
+import org.slothmq.exception.SlothHttpException;
+import org.slothmq.exception.ForbiddenAccessException;
 import org.slothmq.exception.UnauthorizedAccessException;
 import org.slothmq.server.jwt.JwtUtil;
 import org.slothmq.server.web.annotation.WebRoute;
+import org.slothmq.server.web.dto.ErrorDto;
 import org.slothmq.server.web.dto.PageRequest;
+import org.slothmq.server.web.exception.SlothExceptionHandler;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -25,13 +29,28 @@ public class SlothHttpHandler implements HttpHandler {
     private static final ObjectMapper MAPPER;
 
     static {
-        MAPPER = new ObjectMapper();
+        MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
     @Override
-    public void handle(HttpExchange exchange) {
-        routeRequests(exchange);
+    public void handle(HttpExchange exchange) throws IOException {
+        try {
+            routeRequests(exchange);
+        } catch (Throwable e) {
+            handleError(e, exchange);
+        }
+    }
+
+    private void handleError(Throwable e, HttpExchange exchange) throws IOException {
+        ErrorDto errorDto;
+        if (e instanceof SlothHttpException) {
+            errorDto = SlothExceptionHandler.parseException((SlothHttpException) e);
+            this.printRawResponse(exchange, errorDto, errorDto.httpStatus());
+        } else {
+            errorDto = SlothExceptionHandler.parseException(e);
+        }
+        this.printRawResponse(exchange, errorDto, errorDto.httpStatus());
     }
 
     void routeRequests(HttpExchange exchange) {
@@ -137,7 +156,7 @@ public class SlothHttpHandler implements HttpHandler {
         String authentication = exchange.getRequestHeaders().getFirst("Authentication");
 
         if (authentication == null || !authentication.startsWith("Bearer ")) {
-            throw new InvalidUserException("Invalid user/pass combination");
+            throw new UnauthorizedAccessException("Invalid user/pass combination");
         }
 
         String base64Credentials = authentication.substring("Bearer ".length());
@@ -148,7 +167,7 @@ public class SlothHttpHandler implements HttpHandler {
         String authentication = exchange.getRequestHeaders().getFirst("Authentication");
 
         if (authentication == null || !authentication.startsWith("Bearer ")) {
-            throw new InvalidUserException("Invalid user/pass combination");
+            throw new UnauthorizedAccessException("Invalid user/pass combination");
         }
 
         String base64Credentials = authentication.substring("Bearer ".length());
@@ -157,7 +176,7 @@ public class SlothHttpHandler implements HttpHandler {
                 .anyMatch(a -> Arrays.asList(authGroups.split(",")).contains(a));
 
         if (!hasAudience) {
-            throw new UnauthorizedAccessException(base64Credentials, authGroups);
+            throw new ForbiddenAccessException(base64Credentials, authGroups);
         }
     }
 }

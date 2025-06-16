@@ -1,7 +1,13 @@
 package org.slothmq.exception;
 
-public class InvalidUserException extends RuntimeException {
+//http exception
+public class InvalidUserException extends SlothHttpException {
     public InvalidUserException(String message) {
         super(message);
+    }
+
+    @Override
+    public int httpCode() {
+        return 400;
     }
 }

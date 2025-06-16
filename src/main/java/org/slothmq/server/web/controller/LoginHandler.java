@@ -8,6 +8,7 @@ import org.slothmq.server.web.annotation.WebRoute;
 import org.slothmq.server.web.service.UserService;
 
 import java.io.IOException;
+import java.util.Base64;
 
 public class LoginHandler extends SlothHttpHandler {
     private final UserService userService = new UserService();
@@ -15,15 +16,10 @@ public class LoginHandler extends SlothHttpHandler {
     @WebRoute(routeRegexp = "/api/login$", method = "POST")
     public void login(HttpExchange exchange) throws IOException {
         // Basic auth expected
-        String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Basic ")) {
-            printEmptyResponse(exchange, 401);
-            return;
-        }
 
-        String base64Credentials = authHeader.substring("Basic ".length());
+        User user = extractRequestBody(exchange, User.class);
 
-        User loggedUser = userService.login(base64Credentials);
+        User loggedUser = userService.login(Base64.getEncoder().encodeToString((user.getUserName() + ":" + user.getPasskey()).getBytes()));
         String jwtToken = JwtUtil.generateToken(loggedUser.getUserName(), loggedUser.getAccessGroups());
 
         printRawResponse(exchange, jwtToken, 200);
