@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 public class JwtUtil {
-    private static final String SECRET = "ypZAh13dlOk2YxtYRwCYUwS0KgVDr8pd"; //inject through Env?
+    private static final String SECRET = "<redacted>"; //inject through Env?
     private static final long EXPIRATION_TIME_MS = 1000 * 60 * 60; //1 hour
     private static final Algorithm ALGORITHM = Algorithm.HMAC256(SECRET);
 
