@@ -19,7 +19,7 @@ public class UserHandler extends SlothHttpHandler {
         this.userService = new UserService();
     }
 
-    @WebRoute(routeRegexp = "/api/users.*?", method = "GET", needsAuthentication = true, authorizationGroups = "viewer")
+    @WebRoute(routeRegexp = "/api/users.*?", method = "GET", needsAuthentication = true, authorizationGroups = "admin,viewer")
     public void getAll(HttpExchange exchange) throws IOException  {
         PageRequest pageRequest = extractPageRequest(exchange);
         Paged<User> pagedUserList = userService.listPaged(pageRequest);
@@ -32,7 +32,7 @@ public class UserHandler extends SlothHttpHandler {
         printRawResponse(exchange, pagedUserList, 200);
     }
 
-    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)$", method = "GET", needsAuthentication = true, authorizationGroups = "viewer")
+    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)$", method = "GET", needsAuthentication = true, authorizationGroups = "admin,viewer")
     public void findOne(HttpExchange exchange) throws IOException  {
         String path = exchange.getRequestURI().getPath();
         Pattern pattern = Pattern.compile("/api/users/([\\w\\-.]+)$");
@@ -60,7 +60,7 @@ public class UserHandler extends SlothHttpHandler {
         printRawResponse(exchange, createdUser, 201);
     }
 
-    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)$", method = "DELETE", needsAuthentication = true, authorizationGroups = "admin")
+    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)$", method = "DELETE", needsAuthentication = true, authorizationGroups = "admin,viewer")
     public void deleteOne(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         Pattern pattern = Pattern.compile("/api/users/([\\w\\-.]+)$");

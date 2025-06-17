@@ -4,6 +4,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.BsonDocument;
 import org.bson.BsonValue;
@@ -112,16 +113,10 @@ public class UserService {
     public void removeOne(String identifier) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
 
-        Document filter = new Document("id", identifier)
-                .append("active", true);
+        Document filter = new Document("id", identifier);
+        DeleteResult deleteResult = collection.deleteOne(filter);
 
-        Document replacement = Optional.ofNullable(collection.find( filter)
-                        .first())
-                .orElseThrow();
-        replacement.append("active", false);
-
-        UpdateResult updateResult = collection.replaceOne(filter, replacement);
-        assert updateResult.getModifiedCount() == 1;
+        assert deleteResult.getDeletedCount() == 1;
     }
 
     public void editOne(String identifier, User user) {
@@ -134,7 +129,7 @@ public class UserService {
                 .orElseThrow();
 
         replacement.append("active", user.getActive())
-                .append("accessGroups", user.getAccessGroups())
+                .append("accessGroups", String.join(",", user.getAccessGroups()))
                 .append("userName", user.getUserName())
                 .append("name", user.getName());
 
@@ -169,7 +164,7 @@ public class UserService {
 
     public User login(String base64Credentials) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
-        Document filter = new Document("passkey", base64Credentials);
+        Document filter = new Document("passKey", base64Credentials);
         Document first = Optional.ofNullable(collection.find(filter)
                         .first())
                 .orElseThrow(() -> new InvalidUserException("UserName or Password not found"));

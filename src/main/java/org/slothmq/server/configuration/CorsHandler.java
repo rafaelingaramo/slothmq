@@ -26,6 +26,7 @@ public class CorsHandler implements HttpHandler {
             headers.add("Access-Control-Allow-Origin", origin);
             headers.add("Access-Control-Allow-Headers", "Content-Type");
             headers.add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            headers.add("Access-Control-Allow-Headers", "Authorization");
         }
 
         // Handle preflight OPTIONS request

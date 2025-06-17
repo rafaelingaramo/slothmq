@@ -153,7 +153,7 @@ public class SlothHttpHandler implements HttpHandler {
     }
 
     private void checkAuthentication(HttpExchange exchange) {
-        String authentication = exchange.getRequestHeaders().getFirst("Authentication");
+        String authentication = exchange.getRequestHeaders().getFirst("Authorization");
 
         if (authentication == null || !authentication.startsWith("Bearer ")) {
             throw new UnauthorizedAccessException("Invalid user/pass combination");
@@ -164,7 +164,7 @@ public class SlothHttpHandler implements HttpHandler {
     }
 
     private void checkAuthorization(HttpExchange exchange, String authGroups) {
-        String authentication = exchange.getRequestHeaders().getFirst("Authentication");
+        String authentication = exchange.getRequestHeaders().getFirst("Authorization");
 
         if (authentication == null || !authentication.startsWith("Bearer ")) {
             throw new UnauthorizedAccessException("Invalid user/pass combination");

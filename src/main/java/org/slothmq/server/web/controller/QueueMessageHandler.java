@@ -18,7 +18,7 @@ public class QueueMessageHandler extends SlothHttpHandler {
         this.queueMessagesService = new QueueMessagesService();
     }
 
-    @WebRoute(routeRegexp = "/api/messages$", method = "GET", needsAuthentication = true, authorizationGroups = "viewer")
+    @WebRoute(routeRegexp = "/api/messages$", method = "GET", needsAuthentication = true, authorizationGroups = "viewer,admin")
     public void getAll(HttpExchange exchange) throws IOException  {
         List<Tuple<String, Integer>> queueNames = queueMessagesService.getQueueNames();
 
