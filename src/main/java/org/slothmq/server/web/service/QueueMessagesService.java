@@ -8,7 +8,7 @@ import org.bson.Document;
 import org.slothmq.dto.Tuple;
 import org.slothmq.exception.UnableToPurgeException;
 import org.slothmq.mongo.MongoConnector;
-import org.slothmq.queue.MasterQueue;
+import org.slothmq.queue.QueueHandler;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -16,11 +16,11 @@ import java.util.List;
 
 public class QueueMessagesService {
     private final MongoDatabase mongoDatabase;
-    private final MasterQueue masterQueue;
+    private final QueueHandler queueHandler;
 
     public QueueMessagesService() {
         this.mongoDatabase = MongoConnector.getDatabaseInstance();
-        this.masterQueue = MasterQueue.getInstance();
+        this.queueHandler = QueueHandler.getInstance();
     }
 
     public List<Tuple<String, Integer>> getQueueNames() {
@@ -52,6 +52,6 @@ public class QueueMessagesService {
             throw new UnableToPurgeException(collectionName);
         }
 
-        masterQueue.deleteFromQueue(collectionName);
+        queueHandler.deleteFromQueue(collectionName);
     }
 }

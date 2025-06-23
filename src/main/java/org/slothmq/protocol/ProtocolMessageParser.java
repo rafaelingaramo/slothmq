@@ -43,7 +43,7 @@ public class ProtocolMessageParser {
                 .findFirst()
                 .map(value -> value.replaceAll("--timestamp:", "").trim())
                 .ifPresent(value -> protocolTransferObject
-                        .setTimestamp(Instant.parse(value.trim())));
+                        .setTimestamp(Instant.ofEpochMilli(Long.parseLong(value))));
 
         Arrays.stream(split)
                 .filter(s -> s.contains("contents"))

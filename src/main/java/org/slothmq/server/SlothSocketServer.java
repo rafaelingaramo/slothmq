@@ -4,7 +4,7 @@ import org.slothmq.exception.IncommunicableException;
 import org.slothmq.mongo.MongoConnector;
 import org.slothmq.protocol.MessageType;
 import org.slothmq.protocol.ProtocolTransferObject;
-import org.slothmq.queue.MasterQueue;
+import org.slothmq.queue.QueueHandler;
 import org.slothmq.queue.MessageReader;
 import org.slothmq.queue.runner.QueueConsumerRunner;
 import org.slothmq.queue.runner.QueueProducerRunner;
@@ -22,17 +22,21 @@ import java.util.concurrent.TimeUnit;
 
 //TODO shutdown hook, remove pool resources
 public class SlothSocketServer {
-    public static final MongoDatabase mongoDatabase;
+    private static final MongoDatabase MONGO_DATABASE;
     private static final Logger LOG = LoggerFactory.getLogger(SlothSocketServer.class);
     private static final ScheduledExecutorService CONSUMER_THREAD_POOL = Executors.newScheduledThreadPool(100);
     private static final ExecutorService PRODUCER_SERVICE_POOL = Executors.newFixedThreadPool(100);
 
     static {
-        mongoDatabase = MongoConnector.getDatabaseInstance();
+        MONGO_DATABASE = MongoConnector.getDatabaseInstance();
+    }
+
+    public static MongoDatabase getMongoDatabase() {
+        return MONGO_DATABASE;
     }
 
     public void start() {
-        MasterQueue.startQueueFromDatabase();
+        QueueHandler.startQueueFromDatabase();
         try (ServerSocket serverSocket = new ServerSocket(9999)) {
             while (true) {
                 LOG.info("waiting new connections");

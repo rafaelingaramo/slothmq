@@ -1,7 +1,7 @@
 package org.slothmq.queue.runner;
 
 import org.slothmq.protocol.ProtocolTransferObject;
-import org.slothmq.queue.MasterQueue;
+import org.slothmq.queue.QueueHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +24,7 @@ public class QueueConsumerRunner implements Runnable {
         try {
             PrintWriter out = new PrintWriter(socketClient.getOutputStream(), true);
 
-            Object object = MasterQueue.getInstance().consumeFromQueue(letter.getAddress());
+            Object object = QueueHandler.getInstance().consumeFromQueue(letter.getAddress());
             if (object != null) {
                 out.println(object);
             }

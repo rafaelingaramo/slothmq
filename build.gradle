@@ -1,11 +1,52 @@
 apply plugin: 'java'
 apply plugin: 'application'
+apply plugin: 'jacoco'
 
 group = 'org.example'
 version = '1.0-SNAPSHOT'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 repositories {
     mavenCentral()
+}
+
+jacoco {
+    toolVersion = "0.8.10"
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn test
+    violationRules {
+        rule {
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
+}
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+    exclude 'org.slothmq.client'
+    exclude 'org.slothmq.dto'
+    exclude 'org.slothmq.exception'
+    exclude 'org.slothmq.mongo'
+    exclude 'org.slothmq.protocol.ProtocolTransferObject'
+    exclude 'org.slothmq.queue.runner'
 }
 
 dependencies {
@@ -14,5 +55,12 @@ dependencies {
     implementation 'org.mongodb:mongodb-driver-sync:5.5.0'
     implementation 'io.netty:netty-all:4.1.107.Final'
     implementation 'com.auth0:java-jwt:4.5.0'
+
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params'
+    testImplementation 'org.mockito:mockito-core:5.18.0'
+
     //TODO fix vulnerabilities
 }

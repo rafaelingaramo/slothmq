@@ -12,13 +12,15 @@ import org.slothmq.server.SlothSocketServer;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class MasterQueue {
-    private static final Logger LOG = LoggerFactory.getLogger(MasterQueue.class);
+public class QueueHandler {
+    private static final Logger LOG = LoggerFactory.getLogger(QueueHandler.class);
     private static final Map<String, Queue<Object>> MAP_QUEUE_STRUCT = new HashMap<>();
-    private static final MasterQueue INSTANCE = new MasterQueue();
-    private static final MongoDatabase database = SlothSocketServer.mongoDatabase;
+    private static final QueueHandler INSTANCE = new QueueHandler();
+    private static final MongoDatabase database = SlothSocketServer.getMongoDatabase();
     private static final String PRODUCER_KEY = "MasterQueue.Producer";
     private static final String CONSUMER_KEY = "MasterQueue.Consumer";
+
+    private QueueHandler() {}
 
     public static void startQueueFromDatabase() {
         LOG.info("Initializing system from database");
@@ -32,7 +34,7 @@ public class MasterQueue {
     }
 
     //TODO make it singleton by making the constructor private
-    public static MasterQueue getInstance() {
+    public static QueueHandler getInstance() {
         return INSTANCE;
     }
 
@@ -55,6 +57,7 @@ public class MasterQueue {
         }
     }
 
+    //TODO not deleting from database? need to add an index here to be able to delete from database
     public Object consumeFromQueue(String queueName) {
         if (!MAP_QUEUE_STRUCT.containsKey(queueName)) {
             throw new NonexistentQueueException(queueName);
@@ -78,7 +81,7 @@ public class MasterQueue {
             throw new NonexistentQueueException(queueName);
         }
 
-        synchronized (MasterQueue.class) {
+        synchronized (QueueHandler.class) {
             MAP_QUEUE_STRUCT.get(queueName).clear();
         }
     }
