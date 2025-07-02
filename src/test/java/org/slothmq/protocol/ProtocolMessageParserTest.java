@@ -31,4 +31,30 @@ public class ProtocolMessageParserTest {
         assert protocolTransferObject.getTimestamp().toEpochMilli() == now.toEpochMilli();
         assert Objects.equals(protocolTransferObject.getContents(), "{\"visible\": true}");
     }
+
+    @ParameterizedTest
+    @CsvSource({"CONSUME,QUEUE,queue.command.order.purchase",
+    "PRODUCE,TOPIC,topic.listener.order.purchase"})
+    public void givenIHaveAValidObjectTransformIntoAString(String message,
+                                                           String destination,
+                                                           String address) {
+        //given
+        Instant now = Instant.now();
+        ProtocolTransferObject protocolTransferObject = new ProtocolTransferObject();
+        protocolTransferObject.setMessage(MessageType.valueOf(message));
+        protocolTransferObject.setDestination(DestinationType.valueOf(destination));
+        protocolTransferObject.setAddress(address);
+        protocolTransferObject.setTimestamp(now);
+        protocolTransferObject.setAuthentication("base64(admin:secret)");
+        //when
+        String protocolString = ProtocolMessageParser.fromObject(protocolTransferObject);
+
+        //then
+        assert protocolString.contains("--message: " + message);
+        assert protocolString.contains("--destination: " + destination);
+        assert protocolString.contains("--address: " + address);
+        assert protocolString.contains("--timestamp: " + now.toEpochMilli());
+        assert protocolString.contains("--authentication: base64(admin:secret)");
+
+    }
 }

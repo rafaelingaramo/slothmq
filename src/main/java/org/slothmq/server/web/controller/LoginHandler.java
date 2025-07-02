@@ -1,6 +1,7 @@
 package org.slothmq.server.web.controller;
 
 import com.sun.net.httpserver.HttpExchange;
+import org.slothmq.server.SlothSharedResources;
 import org.slothmq.server.jwt.JwtUtil;
 import org.slothmq.server.user.User;
 import org.slothmq.server.web.SlothHttpHandler;
@@ -12,7 +13,7 @@ import java.io.IOException;
 import java.util.Base64;
 
 public class LoginHandler extends SlothHttpHandler {
-    private final UserService userService = new UserService();
+    private final UserService userService = new UserService(SlothSharedResources.MONGO_DATABASE);
 
     @WebRoute(routeRegexp = "/api/login$", method = "POST")
     public void login(HttpExchange exchange) throws IOException {

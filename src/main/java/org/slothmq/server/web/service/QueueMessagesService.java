@@ -18,9 +18,9 @@ public class QueueMessagesService {
     private final MongoDatabase mongoDatabase;
     private final QueueHandler queueHandler;
 
-    public QueueMessagesService() {
-        this.mongoDatabase = MongoConnector.getDatabaseInstance();
-        this.queueHandler = QueueHandler.getInstance();
+    public QueueMessagesService(MongoDatabase mongoDatabase, QueueHandler queueHandler) {
+        this.mongoDatabase = mongoDatabase;
+        this.queueHandler = queueHandler;
     }
 
     public List<Tuple<String, Integer>> getQueueNames() {

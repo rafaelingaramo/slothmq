@@ -24,6 +24,21 @@ jacocoTestReport {
         xml.required = true
         html.required = true
     }
+    afterEvaluate {
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, exclude: [
+                            'org/slothmq/client/**',
+                            'org/slothmq/dto/**',
+                            'org/slothmq/exception/**',
+                            'org/slothmq/mongo/**',
+                            'org/slothmq/protocol/ProtocolTransferObject*',
+                            'org/slothmq/queue/runner/**',
+                            'org/slothmq/server/configuration/CorsHandler*'
+                    ])
+                })
+        )
+    }
 }
 
 jacocoTestCoverageVerification {
@@ -36,17 +51,23 @@ jacocoTestCoverageVerification {
                 minimum = 0.80
             }
         }
+        rule {
+            element = 'CLASS'
+            excludes = [
+                'org/slothmq/client/**',
+                'org/slothmq/dto/**',
+                'org/slothmq/exception/**',
+                'org/slothmq/mongo/**',
+                'org/slothmq/protocol/ProtocolTransferObject*',
+                'org/slothmq/queue/runner/**',
+                'org/slothmq/server/configuration/CorsHandler*'
+            ]
+        }
     }
 }
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
-    exclude 'org.slothmq.client'
-    exclude 'org.slothmq.dto'
-    exclude 'org.slothmq.exception'
-    exclude 'org.slothmq.mongo'
-    exclude 'org.slothmq.protocol.ProtocolTransferObject'
-    exclude 'org.slothmq.queue.runner'
 }
 
 dependencies {

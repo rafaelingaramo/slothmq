@@ -5,14 +5,17 @@ import org.slothmq.queue.QueueHandler;
 
 public class QueueProducerRunner implements Runnable {
     private final ProtocolTransferObject letter;
+    private final QueueHandler queueHandler;
 
-    public QueueProducerRunner(ProtocolTransferObject letter) {
+    public QueueProducerRunner(ProtocolTransferObject letter,
+                               QueueHandler queueHandler) {
         this.letter = letter;
+        this.queueHandler = queueHandler;
     }
 
     @Override
     public void run() {
         //adds message to database + adds onto the queue to be consumed, needs to be async
-        QueueHandler.getInstance().pushToQueue(letter.getAddress(), letter.getContents());
+        queueHandler.pushToQueue(letter.getAddress(), letter.getContents());
     }
 }

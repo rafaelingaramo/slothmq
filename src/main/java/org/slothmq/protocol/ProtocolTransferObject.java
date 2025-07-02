@@ -90,7 +90,7 @@ public class ProtocolTransferObject {
         return "--message: " + message + "\n" +
                 "--destination: " + destination + "\n" +
                 "--address: " + address + "\n" +
-                "--timestamp: " + timestamp + "\n" +
+                "--timestamp: " + timestamp.toEpochMilli() + "\n" +
                 "--authentication: " + authentication + "\n" +
                 "--contents: " + contents;
     }
