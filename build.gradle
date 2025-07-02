@@ -33,7 +33,8 @@ jacocoTestReport {
                             'org/slothmq/exception/**',
                             'org/slothmq/mongo/**',
                             'org/slothmq/protocol/ProtocolTransferObject*',
-                            'org/slothmq/queue/runner/**'
+                            'org/slothmq/queue/runner/**',
+                            'org/slothmq/server/configuration/CorsHandler*'
                     ])
                 })
         )
@@ -58,7 +59,8 @@ jacocoTestCoverageVerification {
                 'org/slothmq/exception/**',
                 'org/slothmq/mongo/**',
                 'org/slothmq/protocol/ProtocolTransferObject*',
-                'org/slothmq/queue/runner/**'
+                'org/slothmq/queue/runner/**',
+                'org/slothmq/server/configuration/CorsHandler*'
             ]
         }
     }
@@ -66,12 +68,6 @@ jacocoTestCoverageVerification {
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
-    exclude 'org.slothmq.client'
-    exclude 'org.slothmq.dto'
-    exclude 'org.slothmq.exception'
-    exclude 'org.slothmq.mongo'
-    exclude 'org.slothmq.protocol.ProtocolTransferObject'
-    exclude 'org.slothmq.queue.runner'
 }
 
 dependencies {
