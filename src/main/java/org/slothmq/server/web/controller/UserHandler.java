@@ -1,6 +1,7 @@
 package org.slothmq.server.web.controller;
 
 import com.sun.net.httpserver.HttpExchange;
+import org.slothmq.server.SlothSharedResources;
 import org.slothmq.server.user.User;
 import org.slothmq.server.web.SlothHttpHandler;
 import org.slothmq.server.web.annotation.WebRoute;
@@ -16,7 +17,7 @@ public class UserHandler extends SlothHttpHandler {
     private final UserService userService;
 
     public UserHandler() {
-        this.userService = new UserService();
+        this.userService = new UserService(SlothSharedResources.MONGO_DATABASE);
     }
 
     @WebRoute(routeRegexp = "/api/users.*?", method = "GET", needsAuthentication = true, authorizationGroups = "admin,viewer")

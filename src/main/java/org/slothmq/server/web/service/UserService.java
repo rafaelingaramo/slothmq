@@ -22,7 +22,6 @@ import org.slothmq.server.web.dto.Paged;
 import java.util.*;
 
 public class UserService {
-    private final MongoDatabase mongoDatabase = MongoConnector.getDatabaseInstance();
     private static final String BASE_USERNAME = "admin";
     private static final String USER_COLLECTION = "private.user.collection";
     //TODO inject through environment variable
@@ -30,6 +29,12 @@ public class UserService {
     private static final String BASE_USER_ACCESS_GROUP = "admin";
     private static final String BASE_USER_NAME = "Admin";
     private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
+
+    private final MongoDatabase mongoDatabase;
+
+    public UserService(MongoDatabase mongoDatabase) {
+        this.mongoDatabase = mongoDatabase;
+    }
 
     public void initUserCollectionIfNeeded() {
         boolean collectionExists = Optional.ofNullable(mongoDatabase.listCollections()

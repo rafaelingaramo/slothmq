@@ -1,7 +1,9 @@
 package org.slothmq.server.web.controller;
 
+import com.mongodb.client.MongoDatabase;
 import com.sun.net.httpserver.HttpExchange;
 import org.slothmq.dto.Tuple;
+import org.slothmq.queue.QueueHandler;
 import org.slothmq.server.web.SlothHttpHandler;
 import org.slothmq.server.web.annotation.WebRoute;
 import org.slothmq.server.web.service.QueueMessagesService;
@@ -14,8 +16,9 @@ import java.util.regex.Pattern;
 public class QueueMessageHandler extends SlothHttpHandler {
     private final QueueMessagesService queueMessagesService;
 
-    public QueueMessageHandler() {
-        this.queueMessagesService = new QueueMessagesService();
+    public QueueMessageHandler(MongoDatabase mongoDatabase, QueueHandler queueHandler) {
+        this.queueMessagesService = new QueueMessagesService(mongoDatabase,
+                queueHandler);
     }
 
     @WebRoute(routeRegexp = "/api/messages$", method = "GET", needsAuthentication = true, authorizationGroups = "viewer,admin")

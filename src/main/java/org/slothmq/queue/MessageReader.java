@@ -18,6 +18,9 @@ public class MessageReader {
         return INSTANCE;
     }
 
+    private MessageReader() {
+
+    }
 
     public ProtocolTransferObject read(Socket socketClient) {
 

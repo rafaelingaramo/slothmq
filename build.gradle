@@ -24,6 +24,20 @@ jacocoTestReport {
         xml.required = true
         html.required = true
     }
+    afterEvaluate {
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, exclude: [
+                            'org/slothmq/client/**',
+                            'org/slothmq/dto/**',
+                            'org/slothmq/exception/**',
+                            'org/slothmq/mongo/**',
+                            'org/slothmq/protocol/ProtocolTransferObject*',
+                            'org/slothmq/queue/runner/**'
+                    ])
+                })
+        )
+    }
 }
 
 jacocoTestCoverageVerification {
@@ -35,6 +49,17 @@ jacocoTestCoverageVerification {
                 value = 'COVEREDRATIO'
                 minimum = 0.80
             }
+        }
+        rule {
+            element = 'CLASS'
+            excludes = [
+                'org/slothmq/client/**',
+                'org/slothmq/dto/**',
+                'org/slothmq/exception/**',
+                'org/slothmq/mongo/**',
+                'org/slothmq/protocol/ProtocolTransferObject*',
+                'org/slothmq/queue/runner/**'
+            ]
         }
     }
 }

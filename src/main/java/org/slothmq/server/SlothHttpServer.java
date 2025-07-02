@@ -22,7 +22,8 @@ public class SlothHttpServer {
         try {
             //TODO make the server port a parameter
             HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
-            server.createContext("/api/messages", withCors(new QueueMessageHandler()));
+            server.createContext("/api/messages", withCors(new QueueMessageHandler(SlothSharedResources.MONGO_DATABASE,
+                    SlothSharedResources.QUEUE_HANDLER)));
             server.createContext("/api/users", withCors(new UserHandler()));
             server.createContext("/api/login", withCors(new LoginHandler()));
             server.createContext("/api/health", withCors(new HealthHandler()));
@@ -30,7 +31,7 @@ public class SlothHttpServer {
             server.setExecutor(null);
             server.start();
             LOG.info("Web server initialized");
-            new UserService().initUserCollectionIfNeeded();
+            new UserService(SlothSharedResources.MONGO_DATABASE).initUserCollectionIfNeeded();
         } catch (Exception e) {
             LOG.error("Exception trying to initialize HTTP Server on 8080", e);
             throw new RuntimeException(e);
