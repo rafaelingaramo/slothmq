@@ -3,13 +3,11 @@ package org.slothmq.server;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slothmq.server.web.controller.HealthHandler;
 import org.slothmq.server.web.controller.LoginHandler;
 import org.slothmq.server.web.controller.QueueMessageHandler;
 import org.slothmq.server.web.controller.UserHandler;
 import org.slothmq.server.web.service.UserService;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import static org.slothmq.server.configuration.CorsHandler.withCors;
@@ -25,8 +23,7 @@ public class SlothHttpServer {
             server.createContext("/api/messages", withCors(new QueueMessageHandler(SlothSharedResources.MONGO_DATABASE,
                     SlothSharedResources.QUEUE_HANDLER)));
             server.createContext("/api/users", withCors(new UserHandler()));
-            server.createContext("/api/login", withCors(new LoginHandler()));
-            server.createContext("/api/health", withCors(new HealthHandler()));
+            server.createContext("/api/login", withCors(new LoginHandler(new UserService(SlothSharedResources.MONGO_DATABASE))));
             //TODO make the executor handle exceptions and/or other errors
             server.setExecutor(null);
             server.start();

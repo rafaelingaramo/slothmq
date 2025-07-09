@@ -2,28 +2,14 @@ package org.slothmq.queue.runner;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.slothmq.FakeOutputStream;
 import org.slothmq.protocol.ProtocolTransferObject;
 import org.slothmq.queue.QueueHandler;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.Socket;
 
 public class QueueConsumerRunnerTest {
-
-    static class FakeOutputStream extends OutputStream {
-        StringBuilder internalBuffer = new StringBuilder();
-        @Override
-        public void write(int b) throws IOException {
-            internalBuffer.append((char)b);
-        }
-
-        public String getContents() {
-            return internalBuffer.toString();
-        }
-    }
-
-
     @Test
     public void givenIHaveAValidAddressAndValidOutputMakeSureItPrintsOut() throws IOException {
         //given

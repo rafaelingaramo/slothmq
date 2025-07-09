@@ -1,41 +1,18 @@
 package org.slothmq.queue;
 
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
+import org.slothmq.FakeInputStream;
 import org.slothmq.protocol.DestinationType;
 import org.slothmq.protocol.MessageType;
 import org.slothmq.protocol.ProtocolTransferObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.Socket;
 import java.util.Objects;
 
 public class MessageReaderTest {
-    static class FakeInputStream extends InputStream {
-        private final String contents;
-        private int pointer = 0;
-
-        public FakeInputStream(String contents) {
-            this.contents = contents;
-        }
-
-        @Override
-        public int read() throws IOException {
-            if (contents == null || contents.isEmpty()) {
-                return 0;
-            }
-
-            if (pointer >= contents.length()){
-                return -1;
-            }
-
-            return contents.charAt(pointer++);
-        }
-    }
-
     @ParameterizedTest
     @CsvSource({"CONSUME,QUEUE,queue.command.order.purchase,{}",
                 "PRODUCE,QUEUE,queue.command.order.purchase,{visible: true}",

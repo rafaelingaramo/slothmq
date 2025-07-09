@@ -34,7 +34,8 @@ jacocoTestReport {
                             'org/slothmq/mongo/**',
                             'org/slothmq/protocol/ProtocolTransferObject*',
                             'org/slothmq/queue/runner/**',
-                            'org/slothmq/server/configuration/CorsHandler*'
+                            'org/slothmq/server/configuration/CorsHandler*',
+                            'org/slothmq/server/web/annotation/**'
                     ])
                 })
         )
@@ -60,7 +61,8 @@ jacocoTestCoverageVerification {
                 'org/slothmq/mongo/**',
                 'org/slothmq/protocol/ProtocolTransferObject*',
                 'org/slothmq/queue/runner/**',
-                'org/slothmq/server/configuration/CorsHandler*'
+                'org/slothmq/server/configuration/CorsHandler*',
+                'org/slothmq/server/web/annotation/**'
             ]
         }
     }

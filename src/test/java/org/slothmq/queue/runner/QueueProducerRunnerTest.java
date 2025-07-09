@@ -5,6 +5,8 @@ import org.mockito.Mockito;
 import org.slothmq.protocol.ProtocolTransferObject;
 import org.slothmq.queue.QueueHandler;
 
+import static org.mockito.Mockito.*;
+
 public class QueueProducerRunnerTest {
     @Test
     public void bla() {
@@ -14,16 +16,16 @@ public class QueueProducerRunnerTest {
         var letter = new ProtocolTransferObject();
         letter.setAddress(address);
         letter.setContents(helloWorld);
-        var queueHandler = Mockito.mock(QueueHandler.class);
-        Mockito.doNothing().when(queueHandler).pushToQueue(Mockito.anyString(), Mockito.any());
+        var queueHandler = mock(QueueHandler.class);
+        doNothing().when(queueHandler).pushToQueue(anyString(), any());
         var queueProducerRunner = new QueueProducerRunner(letter, queueHandler);
 
         //when
         queueProducerRunner.run();
 
         //then
-        Mockito.verify(queueHandler).pushToQueue(
-                Mockito.argThat((addressParameter) -> addressParameter.equals(address)),
-                Mockito.argThat(content -> content.equals(helloWorld)));
+        verify(queueHandler).pushToQueue(
+                argThat((addressParameter) -> addressParameter.equals(address)),
+                argThat(content -> content.equals(helloWorld)));
     }
 }
