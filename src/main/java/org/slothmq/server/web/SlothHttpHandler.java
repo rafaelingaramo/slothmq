@@ -122,15 +122,11 @@ public class SlothHttpHandler implements HttpHandler {
     protected PageRequest extractPageRequest(HttpExchange exchange) {
         String stringQueryParams = exchange.getRequestURI().getQuery();
 
-        if (stringQueryParams == null) {
+        if (stringQueryParams == null || !stringQueryParams.contains("page")) {
             return PageRequest.DEFAULT_PAGING;
         }
 
         Map<String, String> queryParams = parseQueryParams(stringQueryParams);
-
-        if (!queryParams.containsKey("page")) {
-            return PageRequest.DEFAULT_PAGING;
-        }
 
         Integer page = Integer.valueOf(queryParams.get("page"));
         String pageSize = queryParams.get("size");

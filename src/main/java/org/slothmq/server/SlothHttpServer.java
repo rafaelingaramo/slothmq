@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.slothmq.server.web.controller.LoginHandler;
 import org.slothmq.server.web.controller.QueueMessageHandler;
 import org.slothmq.server.web.controller.UserHandler;
+import org.slothmq.server.web.service.QueueMessagesService;
 import org.slothmq.server.web.service.UserService;
 
 import java.net.InetSocketAddress;
@@ -20,11 +21,10 @@ public class SlothHttpServer {
         try {
             //TODO make the server port a parameter
             HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
-            server.createContext("/api/messages", withCors(new QueueMessageHandler(SlothSharedResources.MONGO_DATABASE,
-                    SlothSharedResources.QUEUE_HANDLER)));
-            server.createContext("/api/users", withCors(new UserHandler()));
+            server.createContext("/api/messages", withCors(new QueueMessageHandler(new QueueMessagesService(SlothSharedResources.MONGO_DATABASE,
+                    SlothSharedResources.QUEUE_HANDLER))));
+            server.createContext("/api/users", withCors(new UserHandler(new UserService(SlothSharedResources.MONGO_DATABASE))));
             server.createContext("/api/login", withCors(new LoginHandler(new UserService(SlothSharedResources.MONGO_DATABASE))));
-            //TODO make the executor handle exceptions and/or other errors
             server.setExecutor(null);
             server.start();
             LOG.info("Web server initialized");

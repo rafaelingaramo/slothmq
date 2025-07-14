@@ -16,8 +16,8 @@ import java.util.regex.Pattern;
 public class UserHandler extends SlothHttpHandler {
     private final UserService userService;
 
-    public UserHandler() {
-        this.userService = new UserService(SlothSharedResources.MONGO_DATABASE);
+    public UserHandler(UserService userService) {
+        this.userService = userService;
     }
 
     @WebRoute(routeRegexp = "/api/users.*?", method = "GET", needsAuthentication = true, authorizationGroups = "admin,viewer")
