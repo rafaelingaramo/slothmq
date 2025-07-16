@@ -13,7 +13,6 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slothmq.exception.InvalidUserException;
-import org.slothmq.mongo.MongoConnector;
 import org.slothmq.server.user.User;
 import org.slothmq.server.user.UserMapper;
 import org.slothmq.server.web.dto.PageRequest;

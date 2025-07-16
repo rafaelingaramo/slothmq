@@ -26,7 +26,7 @@ import java.util.*;
  * SlothHttpHandler is a default interface that allows the user to easily reuse print and or route methods inside its own controller
  */
 public class SlothHttpHandler implements HttpHandler {
-    private static final ObjectMapper MAPPER;
+    public static final ObjectMapper MAPPER;
 
     static {
         MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
