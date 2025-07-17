@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.slothmq.server.web.dto.JwtToken;
 
 import java.util.List;
-
+//TODO flaky test
 public class JwtUtilTest {
     @Test
     public void givenIHaveValidUserGenerateNewJWT() {

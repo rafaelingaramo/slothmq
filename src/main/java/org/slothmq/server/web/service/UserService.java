@@ -21,12 +21,12 @@ import org.slothmq.server.web.dto.Paged;
 import java.util.*;
 
 public class UserService {
-    private static final String BASE_USERNAME = "admin";
     private static final String USER_COLLECTION = "private.user.collection";
     //TODO inject through environment variable
+    private static final String BASE_USERNAME = "admin";
     private static final String BASE_USER_PASSKEY = "admin:admin";
     private static final String BASE_USER_ACCESS_GROUP = "admin";
-    private static final String BASE_USER_NAME = "Admin";
+    private static final String BASE_NAME = "Admin";
     private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
 
     private final MongoDatabase mongoDatabase;
@@ -47,7 +47,7 @@ public class UserService {
         mongoDatabase.createCollection(USER_COLLECTION);
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
         collection.insertOne(new Document("id", UUID.randomUUID().toString())
-                .append("name", BASE_USER_NAME)
+                .append("name", BASE_NAME)
                 .append("passkey", new String(Base64.getEncoder().encode(BASE_USER_PASSKEY.getBytes())))
                 .append("accessGroups", BASE_USER_ACCESS_GROUP)
                 .append("userName", BASE_USERNAME)
