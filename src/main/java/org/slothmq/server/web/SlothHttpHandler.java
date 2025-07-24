@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slothmq.exception.SlothHttpException;
 import org.slothmq.exception.ForbiddenAccessException;
 import org.slothmq.exception.UnauthorizedAccessException;
@@ -27,6 +29,7 @@ import java.util.*;
  */
 public class SlothHttpHandler implements HttpHandler {
     public static final ObjectMapper MAPPER;
+    private static final Logger LOG = LoggerFactory.getLogger(SlothHttpHandler.class);
 
     static {
         MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -39,14 +42,15 @@ public class SlothHttpHandler implements HttpHandler {
             routeRequests(exchange);
         } catch (Throwable e) {
             handleError(e, exchange);
+            LOG.error("generic error", e);
         }
     }
 
     private void handleError(Throwable e, HttpExchange exchange) throws IOException {
         ErrorDto errorDto;
-        if (e instanceof SlothHttpException) {
-            errorDto = SlothExceptionHandler.parseException((SlothHttpException) e);
-            this.printRawResponse(exchange, errorDto, errorDto.httpStatus());
+        SlothHttpException slothHttpException;
+        if ((slothHttpException = matchSlothHttpExceptionRecursively(e)) != null) {
+            errorDto = SlothExceptionHandler.parseException(slothHttpException);
         } else {
             errorDto = SlothExceptionHandler.parseException(e);
         }
@@ -85,7 +89,7 @@ public class SlothHttpHandler implements HttpHandler {
 
         try {
             method.invoke(this, exchange);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (Throwable e){
             throw new RuntimeException(e);
         }
     }
@@ -174,5 +178,15 @@ public class SlothHttpHandler implements HttpHandler {
         if (!hasAudience) {
             throw new ForbiddenAccessException(base64Credentials, authGroups);
         }
+    }
+
+    private SlothHttpException matchSlothHttpExceptionRecursively(Throwable e) {
+        if (e instanceof SlothHttpException) {
+            return (SlothHttpException) e;
+        }
+        if (e.getCause() == null) {
+            return null;
+        }
+        return matchSlothHttpExceptionRecursively(e.getCause());
     }
 }

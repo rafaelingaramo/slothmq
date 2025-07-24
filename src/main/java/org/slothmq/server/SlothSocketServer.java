@@ -20,13 +20,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static org.slothmq.server.SlothSharedResources.QUEUE_HANDLER;
-
 //TODO shutdown hook, remove pool resources
 public class SlothSocketServer {
     private static final Logger LOG = LoggerFactory.getLogger(SlothSocketServer.class);
     private static final ScheduledExecutorService CONSUMER_THREAD_POOL = Executors.newScheduledThreadPool(100);
     private static final ExecutorService PRODUCER_SERVICE_POOL = Executors.newFixedThreadPool(100);
+    private final QueueHandler queueHandler;
+
+    public SlothSocketServer(QueueHandler queueHandler) {
+        this.queueHandler = queueHandler;
+    }
 
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(9999)) {
@@ -38,9 +41,9 @@ public class SlothSocketServer {
                 ProtocolTransferObject letter = MessageReader.getInstance().read(socketClient);
                 if (letter.getMessage() == MessageType.CONSUME) {
                     CONSUMER_THREAD_POOL.scheduleAtFixedRate(new QueueConsumerRunner(letter, socketClient,
-                            QUEUE_HANDLER), 0, 500, TimeUnit.MILLISECONDS);
+                            queueHandler), 0, 500, TimeUnit.MILLISECONDS);
                 } else if (letter.getMessage() == MessageType.PRODUCE){
-                    PRODUCER_SERVICE_POOL.execute(new QueueProducerRunner(letter, QUEUE_HANDLER));
+                    PRODUCER_SERVICE_POOL.execute(new QueueProducerRunner(letter, queueHandler));
                 }
             }
         } catch (IOException e) {

@@ -13,6 +13,7 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slothmq.exception.InvalidUserException;
+import org.slothmq.exception.LoginFailedException;
 import org.slothmq.server.user.User;
 import org.slothmq.server.user.UserMapper;
 import org.slothmq.server.web.dto.PageRequest;
@@ -21,12 +22,12 @@ import org.slothmq.server.web.dto.Paged;
 import java.util.*;
 
 public class UserService {
-    private static final String USER_COLLECTION = "private.user.collection";
+    public static final String USER_COLLECTION = "private.user.collection";
     //TODO inject through environment variable
-    private static final String BASE_USERNAME = "admin";
-    private static final String BASE_USER_PASSKEY = "admin:admin";
-    private static final String BASE_USER_ACCESS_GROUP = "admin";
-    private static final String BASE_NAME = "Admin";
+    public static final String BASE_USERNAME = "admin";
+    public static final String BASE_USER_PASSKEY = "admin:admin";
+    public static final String BASE_USER_ACCESS_GROUP = "admin";
+    public static final String BASE_NAME = "Admin";
     private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
 
     private final MongoDatabase mongoDatabase;
@@ -48,7 +49,7 @@ public class UserService {
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
         collection.insertOne(new Document("id", UUID.randomUUID().toString())
                 .append("name", BASE_NAME)
-                .append("passkey", new String(Base64.getEncoder().encode(BASE_USER_PASSKEY.getBytes())))
+                .append("passKey", new String(Base64.getEncoder().encode(BASE_USER_PASSKEY.getBytes())))
                 .append("accessGroups", BASE_USER_ACCESS_GROUP)
                 .append("userName", BASE_USERNAME)
                 .append("active", true));
@@ -171,7 +172,7 @@ public class UserService {
         Document filter = new Document("passKey", base64Credentials);
         Document first = Optional.ofNullable(collection.find(filter)
                         .first())
-                .orElseThrow(() -> new InvalidUserException("UserName or Password not found"));
+                .orElseThrow(() -> new LoginFailedException("UserName or Password not found"));
 
         return UserMapper.from(first);
     }

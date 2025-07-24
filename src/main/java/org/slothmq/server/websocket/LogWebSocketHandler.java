@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 public class LogWebSocketHandler extends SimpleChannelInboundHandler<TextWebSocketFrame> {
     private static final Logger LOG = LoggerFactory.getLogger(LogWebSocketHandler.class);
 
-
-
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {
         LogWebSocketBroadcaster.register(ctx.channel());

@@ -8,6 +8,12 @@ public class MongoConnector {
     private static final String URI = "mongodb://admin:secret@localhost:27017/?authSource=admin";
     private final MongoDatabase database;
 
+    //used by test containers
+    public MongoConnector(String uri) {
+        MongoClient client = MongoClients.create(uri);
+        this.database = client.getDatabase("slothmq");
+    }
+
     public MongoConnector() {
         MongoClient client = MongoClients.create(URI);
         this.database = client.getDatabase("slothmq");

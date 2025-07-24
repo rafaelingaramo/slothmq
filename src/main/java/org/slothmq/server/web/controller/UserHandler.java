@@ -1,7 +1,6 @@
 package org.slothmq.server.web.controller;
 
 import com.sun.net.httpserver.HttpExchange;
-import org.slothmq.server.SlothSharedResources;
 import org.slothmq.server.user.User;
 import org.slothmq.server.web.SlothHttpHandler;
 import org.slothmq.server.web.annotation.WebRoute;
