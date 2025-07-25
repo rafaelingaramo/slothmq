@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slothmq.exception.InvalidUserException;
 import org.slothmq.exception.LoginFailedException;
+import org.slothmq.exception.NonexistentUserException;
 import org.slothmq.server.user.User;
 import org.slothmq.server.user.UserMapper;
 import org.slothmq.server.web.dto.PageRequest;
@@ -94,7 +95,7 @@ public class UserService {
 
     public User insertOne(User user) {
         if (user.getName() == null ||
-            user.getAccessGroups() == null ||
+            (user.getAccessGroups() == null || user.getAccessGroups().length == 0) ||
             user.getUserName() == null) {
             throw new InvalidUserException("One or more fields are missing");
         }
@@ -116,8 +117,9 @@ public class UserService {
     }
 
     public void removeOne(String identifier) {
-        MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
+        findOne(identifier); //checks if the element exists on database if not throws an exception
 
+        MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
         Document filter = new Document("id", identifier);
         DeleteResult deleteResult = collection.deleteOne(filter);
 
@@ -126,12 +128,10 @@ public class UserService {
 
     public void editOne(String identifier, User user) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
-
         Document filter = new Document("id", identifier);
-
         Document replacement = Optional.ofNullable(collection.find(filter)
                         .first())
-                .orElseThrow();
+                .orElseThrow(() -> new NonexistentUserException("User not found"));
 
         replacement.append("active", user.getActive())
                 .append("accessGroups", String.join(",", user.getAccessGroups()))
@@ -149,7 +149,7 @@ public class UserService {
 
         Document result = Optional.ofNullable(collection.find(filter)
                         .first())
-                .orElseThrow();
+                .orElseThrow(() -> new NonexistentUserException("User not found"));
 
         return UserMapper.from(result);
     }
@@ -161,7 +161,7 @@ public class UserService {
 
         Document replacement = Optional.ofNullable(collection.find(filter)
                         .first())
-                .orElseThrow();
+                .orElseThrow(() -> new NonexistentUserException("User not found"));
         replacement.append("passKey", new String(Base64.getEncoder().encode((replacement.get("userName") + ":" + user.getPasskey()).getBytes())));
         UpdateResult updateResult = collection.replaceOne(filter, replacement);
         assert updateResult.getModifiedCount() == 1;

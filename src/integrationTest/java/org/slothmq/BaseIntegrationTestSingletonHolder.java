@@ -1,5 +1,8 @@
 package org.slothmq;
 
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
 import org.slothmq.server.Server;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -10,6 +13,8 @@ public class BaseIntegrationTestSingletonHolder {
 
     @Container
     static MongoDBContainer mongodb = new MongoDBContainer("mongo:6.0.11");
+    static MongoClient mongoClient;
+    static MongoDatabase mongoDatabase;
 
     public static void startServer() throws InterruptedException {
         if (SERVER_STARTED)
@@ -29,5 +34,14 @@ public class BaseIntegrationTestSingletonHolder {
     public static void stopServer() {
         SERVER.stop();
         SERVER_STARTED = false;
+    }
+
+    public static MongoDatabase getDatabase() {
+        if (mongoDatabase != null) {
+            return mongoDatabase;
+        }
+        mongoClient = MongoClients.create(mongodb.getConnectionString());
+        mongoDatabase = mongoClient.getDatabase("slothmq");
+        return mongoDatabase;
     }
 }

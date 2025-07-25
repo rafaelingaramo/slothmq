@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slothmq.exception.InvalidUserException;
+import org.slothmq.exception.NonexistentUserException;
 import org.slothmq.server.user.User;
 import org.slothmq.server.web.dto.PageRequest;
 import org.slothmq.server.web.dto.Paged;
@@ -225,10 +226,19 @@ public class UserServiceTest {
         var userService = new UserService(mongoDatabase);
         var identifier = UUID.randomUUID();
         MongoCollection<Document> userCollection = mock(MongoCollection.class);
-
+        var findIterable = mock(FindIterable.class);
         //stubs
         when(mongoDatabase.getCollection(USER_COLLECTION))
                 .thenReturn(userCollection);
+        when(userCollection.find(any(Document.class)))
+                .thenReturn(findIterable);
+        when(findIterable.first())
+                .thenReturn(new Document("id", UUID.randomUUID().toString())
+                        .append("name", "lorem")
+                        .append("passKey", "lorem")
+                        .append("userName", "ipsum")
+                        .append("active", true)
+                        .append("accessGroups", "admin"));
         when(userCollection.deleteOne(any()))
                 .thenReturn(new DeleteResult() {
                     @Override
@@ -243,7 +253,8 @@ public class UserServiceTest {
                 });
 
         //when
-        Assertions.assertDoesNotThrow(() -> userService.removeOne(identifier.toString()));
+        userService.removeOne(identifier.toString());
+        //Assertions.assertDoesNotThrow(() -> userService.removeOne(identifier.toString()));
     }
 
 
@@ -253,11 +264,14 @@ public class UserServiceTest {
         var mongoDatabase = mock(MongoDatabase.class);
         var userService = new UserService(mongoDatabase);
         var identifier = UUID.randomUUID();
+        var findIterable = mock(FindIterable.class);
         MongoCollection<Document> userCollection = mock(MongoCollection.class);
 
         //stubs
         when(mongoDatabase.getCollection(USER_COLLECTION))
                 .thenReturn(userCollection);
+        when(userCollection.find(any(Document.class)))
+                .thenReturn(findIterable); //just to mock the success behavior of the find one
         when(userCollection.deleteOne(any()))
                 .thenReturn(new DeleteResult() {
                     @Override
@@ -272,7 +286,7 @@ public class UserServiceTest {
                 });
 
         //when
-        Assertions.assertThrows(AssertionError.class, () -> userService.removeOne(identifier.toString()));
+        Assertions.assertThrows(NonexistentUserException.class, () -> userService.removeOne(identifier.toString()));
     }
 
     @Test

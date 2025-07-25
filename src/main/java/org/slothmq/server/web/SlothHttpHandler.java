@@ -68,6 +68,7 @@ public class SlothHttpHandler implements HttpHandler {
                             if (!(a instanceof WebRoute annotation)) {
                                 return false;
                             }
+                            //TODO the matchers should ignore query params if sent, right now they are blocking the requests if not explicit said on expressions
                             boolean methodMatches = annotation.method().equals(requestMethod) &&
                                     requestURI.toString().matches(annotation.routeRegexp());
 
@@ -85,7 +86,7 @@ public class SlothHttpHandler implements HttpHandler {
                             return true;
                         }))
                 .filter(m -> m.getParameterCount() == 1 && m.getParameterTypes()[0].equals(HttpExchange.class))
-                .findAny().orElseThrow();
+                .findAny().orElseThrow(() -> new RuntimeException("No valid route found"));
 
         try {
             method.invoke(this, exchange);
