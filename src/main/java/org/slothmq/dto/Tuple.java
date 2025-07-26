@@ -4,6 +4,10 @@ public class Tuple<K, V> {
     private K key;
     private V value;
 
+    public Tuple() {
+
+    }
+
     public Tuple(K key, V value) {
         this.key = key;
         this.value = value;

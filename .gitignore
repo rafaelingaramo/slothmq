@@ -35,3 +35,6 @@ build/**
 .gradle/8.10/**
 
 .idea/**
+
+.gradle
+.gradle/**

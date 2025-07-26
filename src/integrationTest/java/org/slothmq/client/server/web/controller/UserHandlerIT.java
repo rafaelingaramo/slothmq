@@ -462,16 +462,4 @@ public class UserHandlerIT extends BaseIntegrationTest {
         }
     }
 
-    private String getToken() {
-        User user = new User();
-        user.setUserName("admin");
-        user.setPasskey("admin");
-        return given()
-                .body(user)
-                .when()
-                .post("http://localhost:8080/api/login")
-                .then()
-                .extract()
-                .jsonPath().get("token");
-    }
 }
