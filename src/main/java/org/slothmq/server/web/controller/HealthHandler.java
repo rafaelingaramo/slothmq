@@ -6,12 +6,14 @@ import org.slothmq.server.web.annotation.WebRoute;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 public class HealthHandler extends SlothHttpHandler {
-    @WebRoute(routeRegexp = "/api/health$", method = "GET")
+
+    @WebRoute(routeRegexp = "/api/health", method = "GET")
     public void health(HttpExchange exchange) throws IOException {
-        HashMap<String, String> health = new HashMap<>();
-        health.put("status", "ok");
-        printRawResponse(exchange, health, 200);
+        Map<String, String> status = new HashMap<>();
+        status.put("status", "ok");
+        printRawResponse(exchange, status, 200);
     }
 }

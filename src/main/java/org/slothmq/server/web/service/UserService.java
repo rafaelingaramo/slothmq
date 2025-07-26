@@ -13,7 +13,8 @@ import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slothmq.exception.InvalidUserException;
-import org.slothmq.mongo.MongoConnector;
+import org.slothmq.exception.LoginFailedException;
+import org.slothmq.exception.NonexistentUserException;
 import org.slothmq.server.user.User;
 import org.slothmq.server.user.UserMapper;
 import org.slothmq.server.web.dto.PageRequest;
@@ -22,14 +23,19 @@ import org.slothmq.server.web.dto.Paged;
 import java.util.*;
 
 public class UserService {
-    private final MongoDatabase mongoDatabase = MongoConnector.getDatabaseInstance();
-    private static final String BASE_USERNAME = "admin";
-    private static final String USER_COLLECTION = "private.user.collection";
+    public static final String USER_COLLECTION = "private.user.collection";
     //TODO inject through environment variable
-    private static final String BASE_USER_PASSKEY = "admin:admin";
-    private static final String BASE_USER_ACCESS_GROUP = "admin";
-    private static final String BASE_USER_NAME = "Admin";
+    public static final String BASE_USERNAME = "admin";
+    public static final String BASE_USER_PASSKEY = "admin:admin";
+    public static final String BASE_USER_ACCESS_GROUP = "admin";
+    public static final String BASE_NAME = "Admin";
     private static final Logger LOG = LoggerFactory.getLogger(UserService.class);
+
+    private final MongoDatabase mongoDatabase;
+
+    public UserService(MongoDatabase mongoDatabase) {
+        this.mongoDatabase = mongoDatabase;
+    }
 
     public void initUserCollectionIfNeeded() {
         boolean collectionExists = Optional.ofNullable(mongoDatabase.listCollections()
@@ -43,8 +49,8 @@ public class UserService {
         mongoDatabase.createCollection(USER_COLLECTION);
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
         collection.insertOne(new Document("id", UUID.randomUUID().toString())
-                .append("name", BASE_USER_NAME)
-                .append("passkey", new String(Base64.getEncoder().encode(BASE_USER_PASSKEY.getBytes())))
+                .append("name", BASE_NAME)
+                .append("passKey", new String(Base64.getEncoder().encode(BASE_USER_PASSKEY.getBytes())))
                 .append("accessGroups", BASE_USER_ACCESS_GROUP)
                 .append("userName", BASE_USERNAME)
                 .append("active", true));
@@ -89,7 +95,7 @@ public class UserService {
 
     public User insertOne(User user) {
         if (user.getName() == null ||
-            user.getAccessGroups() == null ||
+            (user.getAccessGroups() == null || user.getAccessGroups().length == 0) ||
             user.getUserName() == null) {
             throw new InvalidUserException("One or more fields are missing");
         }
@@ -111,8 +117,9 @@ public class UserService {
     }
 
     public void removeOne(String identifier) {
-        MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
+        findOne(identifier); //checks if the element exists on database if not throws an exception
 
+        MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
         Document filter = new Document("id", identifier);
         DeleteResult deleteResult = collection.deleteOne(filter);
 
@@ -121,12 +128,10 @@ public class UserService {
 
     public void editOne(String identifier, User user) {
         MongoCollection<Document> collection = mongoDatabase.getCollection(USER_COLLECTION);
-
         Document filter = new Document("id", identifier);
-
         Document replacement = Optional.ofNullable(collection.find(filter)
                         .first())
-                .orElseThrow();
+                .orElseThrow(() -> new NonexistentUserException("User not found"));
 
         replacement.append("active", user.getActive())
                 .append("accessGroups", String.join(",", user.getAccessGroups()))
@@ -144,7 +149,7 @@ public class UserService {
 
         Document result = Optional.ofNullable(collection.find(filter)
                         .first())
-                .orElseThrow();
+                .orElseThrow(() -> new NonexistentUserException("User not found"));
 
         return UserMapper.from(result);
     }
@@ -156,7 +161,7 @@ public class UserService {
 
         Document replacement = Optional.ofNullable(collection.find(filter)
                         .first())
-                .orElseThrow();
+                .orElseThrow(() -> new NonexistentUserException("User not found"));
         replacement.append("passKey", new String(Base64.getEncoder().encode((replacement.get("userName") + ":" + user.getPasskey()).getBytes())));
         UpdateResult updateResult = collection.replaceOne(filter, replacement);
         assert updateResult.getModifiedCount() == 1;
@@ -167,7 +172,7 @@ public class UserService {
         Document filter = new Document("passKey", base64Credentials);
         Document first = Optional.ofNullable(collection.find(filter)
                         .first())
-                .orElseThrow(() -> new InvalidUserException("UserName or Password not found"));
+                .orElseThrow(() -> new LoginFailedException("UserName or Password not found"));
 
         return UserMapper.from(first);
     }

@@ -22,21 +22,16 @@ import java.util.concurrent.TimeUnit;
 
 //TODO shutdown hook, remove pool resources
 public class SlothSocketServer {
-    private static final MongoDatabase MONGO_DATABASE;
     private static final Logger LOG = LoggerFactory.getLogger(SlothSocketServer.class);
     private static final ScheduledExecutorService CONSUMER_THREAD_POOL = Executors.newScheduledThreadPool(100);
     private static final ExecutorService PRODUCER_SERVICE_POOL = Executors.newFixedThreadPool(100);
+    private final QueueHandler queueHandler;
 
-    static {
-        MONGO_DATABASE = MongoConnector.getDatabaseInstance();
-    }
-
-    public static MongoDatabase getMongoDatabase() {
-        return MONGO_DATABASE;
+    public SlothSocketServer(QueueHandler queueHandler) {
+        this.queueHandler = queueHandler;
     }
 
     public void start() {
-        QueueHandler.startQueueFromDatabase();
         try (ServerSocket serverSocket = new ServerSocket(9999)) {
             while (true) {
                 LOG.info("waiting new connections");
@@ -45,9 +40,10 @@ public class SlothSocketServer {
 
                 ProtocolTransferObject letter = MessageReader.getInstance().read(socketClient);
                 if (letter.getMessage() == MessageType.CONSUME) {
-                    CONSUMER_THREAD_POOL.scheduleAtFixedRate(new QueueConsumerRunner(letter, socketClient), 0, 500, TimeUnit.MILLISECONDS);
+                    CONSUMER_THREAD_POOL.scheduleAtFixedRate(new QueueConsumerRunner(letter, socketClient,
+                            queueHandler), 0, 500, TimeUnit.MILLISECONDS);
                 } else if (letter.getMessage() == MessageType.PRODUCE){
-                    PRODUCER_SERVICE_POOL.execute(new QueueProducerRunner(letter));
+                    PRODUCER_SERVICE_POOL.execute(new QueueProducerRunner(letter, queueHandler));
                 }
             }
         } catch (IOException e) {

@@ -15,19 +15,90 @@ repositories {
 }
 
 jacoco {
-    toolVersion = "0.8.10"
+    toolVersion = "0.8.12"
 }
 
+sourceSets {
+    integrationTest {
+        java.srcDir file('src/integrationTest/java')
+        resources.srcDir file ('src/integrationTest/resources')
+        compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+        runtimeClasspath += output + compileClasspath
+    }
+}
+
+configurations {
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+task integrationTest(type: Test) {
+    description = 'Runs integration tests'
+    group = 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    shouldRunAfter test
+    useJUnitPlatform()
+
+    finalizedBy jacocoTestReport
+    jacoco {
+        destinationFile = layout.buildDirectory.file("jacoco/integrationTest.exec").get().asFile
+    }
+}
+
+
+def jacocoExcludes = [
+        'org/slothmq/client/**/*',
+        'org/slothmq/dto/**/*',
+        'org/slothmq/exception/**/*',
+        'org/slothmq/mongo/**/*',
+        'org/slothmq/protocol/ProtocolTransferObject*',
+        'org/slothmq/queue/runner/**/*',
+        'org/slothmq/server/configuration/CorsHandler*',
+        'org/slothmq/server/web/annotation/**/*',
+        'org/slothmq/server/websocket/**/*',
+        'org/slothmq/server/Server*',
+        'org/slothmq/server/SlothHttpServer*',
+        'org/slothmq/server/SlothNettyWebSocketServer*',
+        'org/slothmq/server/SlothSharedResources*',
+        'org/slothmq/server/SlothSocketServer*'
+]
+
 jacocoTestReport {
-    dependsOn test
+    dependsOn test, integrationTest
     reports {
         xml.required = true
         html.required = true
     }
+
+    executionData(
+            fileTree(buildDir).include(
+                    "jacoco/test.exec",
+                    "jacoco/integrationTest.exec"
+            )
+    )
+
+    afterEvaluate {
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, exclude: jacocoExcludes)
+                })
+        )
+    }
 }
 
 jacocoTestCoverageVerification {
-    dependsOn test
+    dependsOn test, integrationTest
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: jacocoExcludes)
+    }))
+
+    executionData(
+            fileTree(buildDir).include(
+                    "jacoco/test.exec",
+                    "jacoco/integrationTest.exec"
+            )
+    )
     violationRules {
         rule {
             limit {
@@ -38,15 +109,10 @@ jacocoTestCoverageVerification {
         }
     }
 }
+
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
-    exclude 'org.slothmq.client'
-    exclude 'org.slothmq.dto'
-    exclude 'org.slothmq.exception'
-    exclude 'org.slothmq.mongo'
-    exclude 'org.slothmq.protocol.ProtocolTransferObject'
-    exclude 'org.slothmq.queue.runner'
 }
 
 dependencies {
@@ -61,6 +127,12 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
     testImplementation 'org.junit.jupiter:junit-jupiter-params'
     testImplementation 'org.mockito:mockito-core:5.18.0'
+
+    integrationTestImplementation 'io.rest-assured:rest-assured:5.4.0'
+    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    integrationTestImplementation 'org.testcontainers:mongodb:1.19.3'
+
+
 
     //TODO fix vulnerabilities
 }

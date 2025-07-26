@@ -12,7 +12,11 @@ import java.io.IOException;
 import java.util.Base64;
 
 public class LoginHandler extends SlothHttpHandler {
-    private final UserService userService = new UserService();
+    private final UserService userService;
+
+    public LoginHandler(UserService userService) {
+        this.userService = userService;
+    }
 
     @WebRoute(routeRegexp = "/api/login$", method = "POST")
     public void login(HttpExchange exchange) throws IOException {

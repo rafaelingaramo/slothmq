@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slothmq.exception.SlothHttpException;
 import org.slothmq.exception.ForbiddenAccessException;
 import org.slothmq.exception.UnauthorizedAccessException;
@@ -26,7 +28,8 @@ import java.util.*;
  * SlothHttpHandler is a default interface that allows the user to easily reuse print and or route methods inside its own controller
  */
 public class SlothHttpHandler implements HttpHandler {
-    private static final ObjectMapper MAPPER;
+    public static final ObjectMapper MAPPER;
+    private static final Logger LOG = LoggerFactory.getLogger(SlothHttpHandler.class);
 
     static {
         MAPPER = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -39,14 +42,15 @@ public class SlothHttpHandler implements HttpHandler {
             routeRequests(exchange);
         } catch (Throwable e) {
             handleError(e, exchange);
+            LOG.error("generic error", e);
         }
     }
 
     private void handleError(Throwable e, HttpExchange exchange) throws IOException {
         ErrorDto errorDto;
-        if (e instanceof SlothHttpException) {
-            errorDto = SlothExceptionHandler.parseException((SlothHttpException) e);
-            this.printRawResponse(exchange, errorDto, errorDto.httpStatus());
+        SlothHttpException slothHttpException;
+        if ((slothHttpException = matchSlothHttpExceptionRecursively(e)) != null) {
+            errorDto = SlothExceptionHandler.parseException(slothHttpException);
         } else {
             errorDto = SlothExceptionHandler.parseException(e);
         }
@@ -64,6 +68,7 @@ public class SlothHttpHandler implements HttpHandler {
                             if (!(a instanceof WebRoute annotation)) {
                                 return false;
                             }
+                            //TODO the matchers should ignore query params if sent, right now they are blocking the requests if not explicit said on expressions
                             boolean methodMatches = annotation.method().equals(requestMethod) &&
                                     requestURI.toString().matches(annotation.routeRegexp());
 
@@ -81,11 +86,11 @@ public class SlothHttpHandler implements HttpHandler {
                             return true;
                         }))
                 .filter(m -> m.getParameterCount() == 1 && m.getParameterTypes()[0].equals(HttpExchange.class))
-                .findAny().orElseThrow();
+                .findAny().orElseThrow(() -> new RuntimeException("No valid route found"));
 
         try {
             method.invoke(this, exchange);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (Throwable e){
             throw new RuntimeException(e);
         }
     }
@@ -122,15 +127,11 @@ public class SlothHttpHandler implements HttpHandler {
     protected PageRequest extractPageRequest(HttpExchange exchange) {
         String stringQueryParams = exchange.getRequestURI().getQuery();
 
-        if (stringQueryParams == null) {
+        if (stringQueryParams == null || !stringQueryParams.contains("page")) {
             return PageRequest.DEFAULT_PAGING;
         }
 
         Map<String, String> queryParams = parseQueryParams(stringQueryParams);
-
-        if (!queryParams.containsKey("page")) {
-            return PageRequest.DEFAULT_PAGING;
-        }
 
         Integer page = Integer.valueOf(queryParams.get("page"));
         String pageSize = queryParams.get("size");
@@ -178,5 +179,15 @@ public class SlothHttpHandler implements HttpHandler {
         if (!hasAudience) {
             throw new ForbiddenAccessException(base64Credentials, authGroups);
         }
+    }
+
+    private SlothHttpException matchSlothHttpExceptionRecursively(Throwable e) {
+        if (e instanceof SlothHttpException) {
+            return (SlothHttpException) e;
+        }
+        if (e.getCause() == null) {
+            return null;
+        }
+        return matchSlothHttpExceptionRecursively(e.getCause());
     }
 }

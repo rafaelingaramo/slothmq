@@ -1,4 +1,4 @@
-package org.slothmq.server.jmx;
+package org.slothmq.server.jmx.record;
 
 public record OSMetrics(
     String name,

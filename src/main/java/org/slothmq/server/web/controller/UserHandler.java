@@ -15,11 +15,11 @@ import java.util.regex.Pattern;
 public class UserHandler extends SlothHttpHandler {
     private final UserService userService;
 
-    public UserHandler() {
-        this.userService = new UserService();
+    public UserHandler(UserService userService) {
+        this.userService = userService;
     }
 
-    @WebRoute(routeRegexp = "/api/users.*?", method = "GET", needsAuthentication = true, authorizationGroups = "admin,viewer")
+    @WebRoute(routeRegexp = "/api/users(\\?.*)?$", method = "GET", needsAuthentication = true, authorizationGroups = "admin,viewer")
     public void getAll(HttpExchange exchange) throws IOException  {
         PageRequest pageRequest = extractPageRequest(exchange);
         Paged<User> pagedUserList = userService.listPaged(pageRequest);
@@ -32,10 +32,10 @@ public class UserHandler extends SlothHttpHandler {
         printRawResponse(exchange, pagedUserList, 200);
     }
 
-    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)$", method = "GET", needsAuthentication = true, authorizationGroups = "admin,viewer")
+    @WebRoute(routeRegexp = "/api/users/([^/?]+)", method = "GET", needsAuthentication = true, authorizationGroups = "admin,viewer")
     public void findOne(HttpExchange exchange) throws IOException  {
         String path = exchange.getRequestURI().getPath();
-        Pattern pattern = Pattern.compile("/api/users/([\\w\\-.]+)$");
+        Pattern pattern = Pattern.compile("/api/users/([^/?]+)");
         Matcher matcher = pattern.matcher(path);
         if (!matcher.find()) {
             throw new RuntimeException();
@@ -60,7 +60,7 @@ public class UserHandler extends SlothHttpHandler {
         printRawResponse(exchange, createdUser, 201);
     }
 
-    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)$", method = "DELETE", needsAuthentication = true, authorizationGroups = "admin,viewer")
+    @WebRoute(routeRegexp = "/api/users/([\\w\\-.]+)$", method = "DELETE", needsAuthentication = true, authorizationGroups = "admin")
     public void deleteOne(HttpExchange exchange) throws IOException {
         String path = exchange.getRequestURI().getPath();
         Pattern pattern = Pattern.compile("/api/users/([\\w\\-.]+)$");
